@@ -39,3 +39,13 @@ test('array and symbol literals', t => {
   t.true(parse('x = (#say:to:)'))
   t.true(parse("x = (#(#say:to: 'foo' 9))"))
 })
+
+test('blocks', t => {
+  t.true(parse('x = (blah collect: [ :x | ^x])'))
+  t.true(parse('x = (blah ifTrue: [^1] ifFalse: [^2])'))
+})
+
+test('comments', t => {
+  t.true(parse('x = ("this is heinous" blah collect: [ :x | ^x])'))
+  t.true(parse('x = (blah ifTrue: [^1 "it\'s rad"] ifFalse: [^2])'))
+})

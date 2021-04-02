@@ -1,18 +1,17 @@
 SOM {
 /*
-    classdef =
-        Identifier Equal superclass instanceFields method* ( Separator classFields method* )? endTerm
+    Classdef =
+        identifier equal Superclass InstanceFields Method* (separator ClassFields Method*)? endTerm
 
-    superclass =
-        Identifier? newTerm
+    Superclass =
+        identifier? newTerm
 
-    instanceFields =
+    InstanceFields =
         ( or variable* or )?
 
-    classFields =
+    ClassFields =
         ( or variable* or )?
 */
-
     Method = 
        Pattern equal (primitive | MethodBlock)
 
@@ -28,7 +27,7 @@ SOM {
     KeywordPattern =
         (keyword argument)+
 
-    MethodBlock (a method block) =
+    MethodBlock =
         newTerm BlockContents? endTerm
 
     unarySelector =
@@ -69,7 +68,7 @@ SOM {
         Primary Messages?
 
     Primary =
-        variable | NestedTerm | /* nestedBlock | */ Literal
+        variable | NestedTerm | NestedBlock | Literal
 
     variable = identifier
 
@@ -132,28 +131,29 @@ SOM {
 
     string =
         stString
-/*
-    nestedBlock =
-        newBlock blockPattern? blockContents? endBlock
 
-    blockPattern =
-        blockArguments or
+    NestedBlock =
+        newBlock BlockPattern? BlockContents? endBlock
 
-    blockArguments =
-        ( Colon argument )+
+    BlockPattern =
+        BlockArguments or
+
+    BlockArguments =
+        ( colon argument )+
 
     // Lexer
 
-    Comment =   '"' ~["]* '"' -> skip
-    Whitespace : [ \t\r\n]+ -> skip 
-*/
+    comment = quote (~quote any)* quote
+    quote = "\""
+    space += comment
+
     primitive = "primitive"
     identifier = letter (letter | digit | "_")*
 
     equal = "="
-/*
-    Separator = '----' '-'*
-*/
+
+    separator = "----" "-"*
+
     newTerm = "("
     endTerm = ")"
     or = "|"
