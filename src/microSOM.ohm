@@ -13,14 +13,14 @@ SOM {
         ( or variable* or )?
 */
 
-    Method (a method) = 
+    Method = 
        Pattern equal (primitive | MethodBlock)
 
-    Pattern (a pattern) =
-        KeywordPattern | UnaryPattern | BinaryPattern
+    Pattern =
+        UnaryPattern | BinaryPattern | KeywordPattern
 
     UnaryPattern = 
-        unarySelector
+        unarySelector ~colon
 
     BinaryPattern =
         binarySelector argument
@@ -66,35 +66,36 @@ SOM {
         variable assign
 
     Evaluation =
-        Primary /* Messages? */
+        Primary Messages?
 
     Primary =
-        variable /* | nestedTerm | nestedBlock */ | Literal
+        variable /* | NestedTerm | nestedBlock */ | Literal
 
     variable = identifier
+
+    // TODO(pdubroy): Make this recursive instead?
+    Messages =
+        | UnaryMessage+ BinaryMessage* KeywordMessage?  -- unaryFirst
+        | BinaryMessage+ KeywordMessage?  -- binaryFirst
+        | KeywordMessage
+
+    UnaryMessage =
+        unarySelector ~colon
+
+    BinaryMessage =
+        binarySelector BinaryOperand
+
+    BinaryOperand =
+        Primary UnaryMessage*
+
+    KeywordMessage =
+        ( keyword Formula )+
+
+    Formula =
+        BinaryOperand BinaryMessage*
 /*
-    messages =
-          unaryMessage+ binaryMessage* keywordMessage?
-        | binaryMessage+ keywordMessage?
-        | keywordMessage
-
-    unaryMessage =
-        unarySelector
-
-    binaryMessage =
-        binarySelector binaryOperand
-
-    binaryOperand =
-        primary unaryMessage*
-
-    keywordMessage =
-        ( keyword formula )+
-
-    formula =
-        binaryOperand binaryMessage*
-
-    nestedTerm =
-        newTerm expression endTerm
+    NestedTerm =
+        newTerm Expression endTerm
 */
     Literal =
         /* LiteralArray | LiteralSymbol | */ Literalstring | LiteralNumber
