@@ -6,7 +6,7 @@
   "scripts": {
     "test": "ava",
     "lint": "standard",
-    "format": "prettier-standard --format"
+    "format": "prettier-standard --format && standard --fix"
   },
   "author": "Patrick Dubroy <pdubroy@gmail.com>",
   "license": "MIT",

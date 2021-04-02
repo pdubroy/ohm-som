@@ -1,15 +1,15 @@
 SOM {
 /*
-    classdef:
+    classdef =
         Identifier Equal superclass instanceFields method* ( Separator classFields method* )? endTerm
 
-    superclass:
+    superclass =
         Identifier? newTerm
 
-    instanceFields:
+    instanceFields =
         ( or variable* or )?
 
-    classFields:
+    classFields =
         ( or variable* or )?
 */
 
@@ -17,34 +17,29 @@ SOM {
        Pattern equal (primitive | MethodBlock)
 
     Pattern (a pattern) =
-        KeywordPattern | UnaryPattern /* | BinaryPattern */
+        KeywordPattern | UnaryPattern | BinaryPattern
 
     UnaryPattern = 
         unarySelector
 
-/*
     BinaryPattern =
         binarySelector argument
-*/
 
     KeywordPattern =
         (keyword argument)+
 
     MethodBlock (a method block) =
-        newTerm /* BlockContents? */ endTerm
+        newTerm BlockContents? endTerm
 
     unarySelector =
         primitive | identifier
 
-/*
-    binarySelector:
-        or | Comma | Minus | Equal | Not | And | Star | Div | Mod | Plus | More |
-        Less | At | Per | OperatorSequence
-*/
+    binarySelector = operatorSequence |
+        or | comma | minus | equal | not | and | star | div | mod | plus | more |
+        less | at | per
 
-    argument =
-        variable
-/*
+    argument = variable
+
     BlockContents =
         (or LocalDefs or)? BlockBody
 
@@ -52,105 +47,105 @@ SOM {
         variable*
 
     BlockBody =
-          Exit result
-        | expression ( Period blockBody? )?
-    result:
-        expression Period?
+          exit Result  -- return
+        | Expression ( period BlockBody? )? -- rec
 
-    expression:
-        assignation | evaluation
+    Result =
+        Expression period?
 
-    assignation:
-        assignments evaluation
+    Expression =
+        Assignation | Evaluation
 
-    assignments:
-        assignment+
+    Assignation =
+        Assignments Evaluation
 
-    assignment:
-        variable Assign
+    Assignments =
+        Assignment+
 
-    evaluation:
-        primary messages?
+    Assignment =
+        variable assign
 
-    primary:
-        variable | nestedTerm | nestedBlock | literal
-*/
-    variable =
-        identifier
+    Evaluation =
+        Primary /* Messages? */
+
+    Primary =
+        variable /* | nestedTerm | nestedBlock */ | Literal
+
+    variable = identifier
 /*
-    messages:
+    messages =
           unaryMessage+ binaryMessage* keywordMessage?
         | binaryMessage+ keywordMessage?
         | keywordMessage
 
-    unaryMessage:
+    unaryMessage =
         unarySelector
 
-    binaryMessage:
+    binaryMessage =
         binarySelector binaryOperand
 
-    binaryOperand:
+    binaryOperand =
         primary unaryMessage*
 
-    keywordMessage:
+    keywordMessage =
         ( keyword formula )+
 
-    formula:
+    formula =
         binaryOperand binaryMessage*
 
-    nestedTerm:
+    nestedTerm =
         newTerm expression endTerm
-
-    literal:
-        literalArray | literalSymbol | literalString | literalNumber
-
-    literalArray:
+*/
+    Literal =
+        /* LiteralArray | LiteralSymbol | */ Literalstring | LiteralNumber
+/*
+    literalArray =
         Pound newTerm
         literal*
         endTerm
+*/
+    LiteralNumber =
+        NegativeDecimal | LiteralDecimal
 
-    literalNumber:
-        negativeDecimal | literalDecimal
+    LiteralDecimal =
+        LiteralDouble | LiteralInteger
 
-    literalDecimal:
-        literalInteger | literalDouble
+    NegativeDecimal =
+        minus LiteralDecimal
 
-    negativeDecimal:
-        Minus literalDecimal
+    LiteralInteger =
+        integer
 
-    literalInteger:
-        Integer
-
-    literalDouble:
-        Double
-
-    literalSymbol:
+    LiteralDouble =
+        double
+/*
+    LiteralSymbol =
         Pound ( string | selector )
-
-    literalString:
+*/
+    Literalstring =
         string
-
-    selector:
+/*
+    selector =
         binarySelector | keywordSelector | unarySelector
 
-    keywordSelector:
+    keywordSelector =
         Keyword | KeywordSequence
-
-    string:
-        STString
-
-    nestedBlock:
+*/
+    string =
+        stString
+/*
+    nestedBlock =
         NewBlock blockPattern? blockContents? EndBlock
 
-    blockPattern:
+    blockPattern =
         blockArguments or
 
-    blockArguments:
+    blockArguments =
         ( Colon argument )+
 
     // Lexer
 
-    Comment:   '"' ~["]* '"' -> skip
+    Comment =   '"' ~["]* '"' -> skip
     Whitespace : [ \t\r\n]+ -> skip 
 */
     primitive = "primitive"
@@ -158,62 +153,58 @@ SOM {
 
     equal = "="
 /*
-    Separator: '----' '-'*
+    Separator = '----' '-'*
 */
     newTerm = "("
     endTerm = ")"
     or = "|"
 
-/*
-    Comma: ','
-    Minus: '-'
-    Not:   '~'
-    And:   '&'
-    Star:  '*'
-    Div:   '/'
-    Mod:   '\\'
-    Plus:  '+'
-    More:  '>'
-    Less:  '<'
-    At:    '@'
-    Per:   '%'
+    comma = ","
+    minus = "-"
+    not =   "~"
+    and =   "&"
+    star =  "*"
+    div =   "/"
+    mod =   "\\"
+    plus =  "+"
+    more =  ">"
+    less =  "<"
+    at =    "@"
+    per =   "%"
 
-    OperatorSequence: (
-        Not | And | or | Star | Div |
-        Mod | Plus | Equal | More | Less |
-        Comma | At | Per | Minus )+
-*/
+    operatorSequence = (
+        not | and | or | star | div |
+        mod | plus | equal | more | less |
+        comma | at | per | minus )+
+
     colon = ":"
 /*
-    NewBlock: '['
-    EndBlock: ']'
+    NewBlock = '['
+    EndBlock = ']'
 
-    Pound:  '#'
+    Pound =  '#'
 */
     exit = "^"
-/*
-    Period: '.'
-    Assign: ':='
+    period = "."
+    assign = ":="
 
-    Integer: [0-9]+
-    Double: [0-9]+ '.' [0-9]+
-*/
+    integer = digit+
+    double = digit+ "." digit+
     keyword = identifier colon
 /*
-    KeywordSequence: Keyword+
-
-    STString:
-        '\''
-        (   '\\t'
-          | '\\b'
-          | '\\n'
-          | '\\r'
-          | '\\f'
-          | '\\0'
-          | '\\\''
-          | '\\\\'
-          |  ~('\''| '\\')
-        )*
-        '\''
+    KeywordSequence = Keyword+
 */
+    stString =
+        "'"
+        (   "\\t"
+          | "\\b"
+          | "\\n"
+          | "\\r"
+          | "\\f"
+          | "\\0"
+          | "\\'"
+          | "\\\\"
+          | ~("'" | "\\") any
+        )*
+        "'"
 }
