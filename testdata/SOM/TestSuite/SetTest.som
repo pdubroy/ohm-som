@@ -1,0 +1,18 @@
+SetTest = TestCase (
+  testBasics = (
+    | a b t |
+    a := Set new.
+    b := Set new.
+    
+    a add: #a.
+    b add: #b.
+    
+    self deny: a = b.
+    
+    t := Set new.
+    t add: #a.
+    
+    self deny: a == t. "different objects"
+    self assert: a equals: t. "but with equal value"
+  )
+)

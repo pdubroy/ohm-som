@@ -1,0 +1,126 @@
+"
+
+$Id: TestHarness.som 30 2009-07-31 12:20:25Z michael.haupt $
+
+Copyright (c) 2001-2013 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"
+
+TestHarness = (
+    | failOnUnsupportedOptionals |
+
+
+    tests = ( "Now ordered by alphabetical order to improve maintainability"
+        ^ EmptyTest,
+          SpecialSelectorsTest,
+          ArrayTest,
+          BlockTest,
+          ClassLoadingTest,
+          ClassStructureTest,
+          ClosureTest,
+          CoercionTest,
+          CompilerReturnTest,
+          DoesNotUnderstandTest,
+          DoubleTest,
+          GlobalTest,
+          HashTest,
+          IntegerTest,
+          PreliminaryTest,
+          ReflectionTest,
+          SelfBlockTest,
+          SetTest,
+          StringTest,
+          SuperTest,
+          SymbolTest,
+          SystemTest,
+          VectorTest
+    )
+
+
+    runAllSuites = (
+      | totalTestNum successfulTestNum unsupportedTestNum totalAssertionNum |
+      totalTestNum := 0.
+      unsupportedTestNum := 0.
+      successfulTestNum := 0.
+      totalAssertionNum := 0.
+
+      self tests do: [ :test |
+        | runner |
+        runner := TestRunner new.
+        runner initializeOn: test.
+        runner runAllTests.
+        (runner hasUnsupported or: [runner hasFailures])
+          ifTrue: [
+            'Test Suite: ' print.
+            test name println.
+            runner overviewReport.
+            '' println ].
+
+        totalTestNum       := totalTestNum + runner expectedPasses.
+        unsupportedTestNum := unsupportedTestNum + runner actualUnsupported.
+        successfulTestNum  := successfulTestNum + runner actualPasses.
+        totalAssertionNum  := totalAssertionNum + runner numAsserts.
+      ].
+
+      'Total number of tests:           ' print.
+      totalTestNum println.
+      'Number of unsupported optionals: ' print.
+      unsupportedTestNum println.
+      'Number of successful tests:      ' print.
+      successfulTestNum println.
+      'Number of assertions tested:     ' print.
+      totalAssertionNum println.
+
+      (failOnUnsupportedOptionals and: [unsupportedTestNum > 0])
+        ifTrue: [system exit: 1].
+      totalTestNum = successfulTestNum
+        ifFalse: [system exit: 1].
+    )
+
+    runOneSuite: name = (
+      | testName runner |
+      testName := name.
+      (testName endsWith: 'Test') ifFalse: [
+        testName := testName + 'Test'].
+
+      runner := TestRunner new.
+      runner initializeOn: (system resolve: testName asSymbol).
+      runner run.
+      runner hasFailures ifTrue: [system exit: 1]
+    )
+
+    run: args = (
+        failOnUnsupportedOptionals := false.
+
+        args length = 1 ifTrue:  [ self runAllSuites. ].
+        args length = 2 ifTrue:  [
+          ((args at: 2) beginsWith: '--') ifTrue: [
+            (args at: 2) = '--help' ifTrue: [
+              'TestHarness.som [--help] [--fail-on-optionals] [TestSuiteName]' println.
+              system exit: 0 ].
+
+            (args at: 2) = '--fail-on-optionals' ifTrue: [
+              failOnUnsupportedOptionals := true ].
+
+            self runAllSuites
+          ] ifFalse: [
+            self runOneSuite: (args at: 2) ]].
+    )
+)
