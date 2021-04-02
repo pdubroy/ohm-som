@@ -20,7 +20,7 @@ SOM {
         UnaryPattern | BinaryPattern | KeywordPattern
 
     UnaryPattern = 
-        unarySelector ~colon
+        unarySelector
 
     BinaryPattern =
         binarySelector argument
@@ -32,7 +32,7 @@ SOM {
         newTerm BlockContents? endTerm
 
     unarySelector =
-        primitive | identifier
+        (primitive | identifier) ~colon
 
     binarySelector = operatorSequence |
         or | comma | minus | equal | not | and | star | div | mod | plus | more |
@@ -69,7 +69,7 @@ SOM {
         Primary Messages?
 
     Primary =
-        variable /* | NestedTerm | nestedBlock */ | Literal
+        variable | NestedTerm | /* nestedBlock | */ Literal
 
     variable = identifier
 
@@ -80,7 +80,7 @@ SOM {
         | KeywordMessage
 
     UnaryMessage =
-        unarySelector ~colon
+        unarySelector
 
     BinaryMessage =
         binarySelector BinaryOperand
@@ -93,18 +93,16 @@ SOM {
 
     Formula =
         BinaryOperand BinaryMessage*
-/*
+
     NestedTerm =
         newTerm Expression endTerm
-*/
+
     Literal =
-        /* LiteralArray | LiteralSymbol | */ Literalstring | LiteralNumber
-/*
-    literalArray =
-        Pound newTerm
-        literal*
-        endTerm
-*/
+        LiteralArray | LiteralSymbol | LiteralString | LiteralNumber
+
+    LiteralArray =
+        pound newTerm Literal* endTerm
+
     LiteralNumber =
         NegativeDecimal | LiteralDecimal
 
@@ -119,24 +117,24 @@ SOM {
 
     LiteralDouble =
         double
-/*
+
     LiteralSymbol =
-        Pound ( string | selector )
-*/
-    Literalstring =
+        pound ( string | selector )
+
+    LiteralString =
         string
-/*
+
     selector =
         binarySelector | keywordSelector | unarySelector
 
     keywordSelector =
-        Keyword | KeywordSequence
-*/
+        keywordSequence | keyword  // TODO(pdubroy): Remove alternation here, 'keyword' is redundant.
+
     string =
         stString
 /*
     nestedBlock =
-        NewBlock blockPattern? blockContents? EndBlock
+        newBlock blockPattern? blockContents? endBlock
 
     blockPattern =
         blockArguments or
@@ -179,12 +177,12 @@ SOM {
         comma | at | per | minus )+
 
     colon = ":"
-/*
-    NewBlock = '['
-    EndBlock = ']'
 
-    Pound =  '#'
-*/
+    newBlock = "["
+    endBlock = "]"
+
+    pound = "#"
+
     exit = "^"
     period = "."
     assign = ":="
@@ -192,9 +190,7 @@ SOM {
     integer = digit+
     double = digit+ "." digit+
     keyword = identifier colon
-/*
-    KeywordSequence = Keyword+
-*/
+    keywordSequence = keyword+
     stString =
         "'"
         (   "\\t"

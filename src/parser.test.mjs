@@ -26,3 +26,16 @@ test('message sends', t => {
   t.true(parse('x = (Pen new go: 100.)'), 'unary and keyword')
   t.true(parse('x = (aPen go: 100 + 20.)'), 'keyword and binary')
 })
+
+test('nested terms', t => {
+  t.true(parse('x = (^(3 + (4)))'))
+  t.true(parse('x = (aPen go: (100 + 20).)'))
+})
+
+test('array and symbol literals', t => {
+  t.true(parse('x = (#())'))
+  t.true(parse('x = (#(3 4))'))
+  t.true(parse('x = (#(#()))'))
+  t.true(parse('x = (#say:to:)'))
+  t.true(parse("x = (#(#say:to: 'foo' 9))"))
+})
