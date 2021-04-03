@@ -1,5 +1,4 @@
 SOM {
-/*
     Classdef =
         identifier equal Superclass InstanceFields Method* (separator ClassFields Method*)? endTerm
 
@@ -11,7 +10,7 @@ SOM {
 
     ClassFields =
         ( or variable* or )?
-*/
+
     Method = 
        Pattern equal (primitive | MethodBlock)
 

@@ -2,50 +2,106 @@ import test from 'ava'
 
 import { parse } from './parser.mjs'
 
+const parseMethod = source => parse(source, 'Method')
+
 test('trivial method declarations', t => {
-  t.true(parse('empty = ()'))
-  t.true(parse('empty = primitive'))
-  t.true(parse('do: blah with: thing = ()'))
+  t.true(parseMethod('empty = ()'))
+  t.true(parseMethod('empty = primitive'))
+  t.true(parseMethod('do: blah with: thing = ()'))
 })
 
 test('non-trivial method declarations', t => {
-  t.true(parse('three = (^3)'))
-  t.true(parse("greet: aPerson = (^'Hello')"))
-  t.true(parse('cold = (^-270.00)'))
+  t.true(parseMethod('three = (^3)'))
+  t.true(parseMethod("greet: aPerson = (^'Hello')"))
+  t.true(parseMethod('cold = (^-270.00)'))
 })
 
 test('binary method declarations', t => {
-  t.true(parse('+ aNumber = (^3)'))
-  t.true(parse('> aNumber = (^true)'))
-  t.true(parse('>> aNumber = (^false)'))
+  t.true(parseMethod('+ aNumber = (^3)'))
+  t.true(parseMethod('> aNumber = (^true)'))
+  t.true(parseMethod('>> aNumber = (^false)'))
 })
 
 test('message sends', t => {
-  t.true(parse('x = (Color yellow)'), 'unary')
-  t.true(parse('x = (aPen go: 100.)'), 'keyword')
-  t.true(parse('x = (Pen new go: 100.)'), 'unary and keyword')
-  t.true(parse('x = (aPen go: 100 + 20.)'), 'keyword and binary')
+  t.true(parseMethod('x = (Color yellow)'), 'unary')
+  t.true(parseMethod('x = (aPen go: 100.)'), 'keyword')
+  t.true(parseMethod('x = (Pen new go: 100.)'), 'unary and keyword')
+  t.true(parseMethod('x = (aPen go: 100 + 20.)'), 'keyword and binary')
 })
 
 test('nested terms', t => {
-  t.true(parse('x = (^(3 + (4)))'))
-  t.true(parse('x = (aPen go: (100 + 20).)'))
+  t.true(parseMethod('x = (^(3 + (4)))'))
+  t.true(parseMethod('x = (aPen go: (100 + 20).)'))
 })
 
 test('array and symbol literals', t => {
-  t.true(parse('x = (#())'))
-  t.true(parse('x = (#(3 4))'))
-  t.true(parse('x = (#(#()))'))
-  t.true(parse('x = (#say:to:)'))
-  t.true(parse("x = (#(#say:to: 'foo' 9))"))
+  t.true(parseMethod('x = (#())'))
+  t.true(parseMethod('x = (#(3 4))'))
+  t.true(parseMethod('x = (#(#()))'))
+  t.true(parseMethod('x = (#say:to:)'))
+  t.true(parseMethod("x = (#(#say:to: 'foo' 9))"))
 })
 
 test('blocks', t => {
-  t.true(parse('x = (blah collect: [ :x | ^x])'))
-  t.true(parse('x = (blah ifTrue: [^1] ifFalse: [^2])'))
+  t.true(parseMethod('x = (blah collect: [ :x | ^x])'))
+  t.true(parseMethod('x = (blah ifTrue: [^1] ifFalse: [^2])'))
 })
 
 test('comments', t => {
-  t.true(parse('x = ("this is heinous" blah collect: [ :x | ^x])'))
-  t.true(parse('x = (blah ifTrue: [^1 "it\'s rad"] ifFalse: [^2])'))
+  t.true(parseMethod('x = ("this is heinous" blah collect: [ :x | ^x])'))
+  t.true(parseMethod('x = (blah ifTrue: [^1 "it\'s rad"] ifFalse: [^2])'))
+})
+
+test('real-world methods', t => {
+  t.true(
+    parseMethod(`  testPerform = (
+    | o |
+    self assert: Integer equals: (23 perform: #class).
+    self assert: (23 perform: #between:and: withArguments: (Array with: 22 with: 24)).
+    
+    o := SuperTest new.
+    self assert: #super equals: (o perform: #something inSuperclass: SuperTestSuperClass).
+    
+    "Trying to see whether the stack in bytecode-based SOMs works properly"
+    self assert: #a equals: ((23 perform: #class) = Integer ifTrue: [#a] ifFalse: [#b]).
+
+    self assert: 28 equals: 5 + (23 perform: #value).
+  )`)
+  )
+  t.true(
+    parseMethod(`overviewReport = (
+    ('Tests passed: ' + passes size asString) println.
+
+    (self hasFailures or: [self hasUnsupported]) ifTrue: [
+        '------------------------------' println ].
+
+    self hasUnsupported ifTrue: [
+      | lastCategory |
+      ('Unsupported optional features: ' + unsupported size asString) println.
+      unsupported do: [:each |
+        | cat |
+        cat := each at: 1.
+        cat == lastCategory ifFalse: [
+          lastCategory := cat.
+          ('\t' + cat) println ].
+        ('\t\t' + (each at: 2) asString) println.
+        ('\t\t\t' + (each at: 3) value asString) println ].
+    ].
+
+    self hasFailures ifTrue: [
+      ('Failures: ' + failures size asString) println.
+      failures do: [:each |
+        ('    ' + each key asString) println.
+        ('        ' + each value asString) println ].
+    ].
+  )`)
+  )
+})
+
+test('minimized source code', t => {
+  t.true(
+    parseMethod(
+      'overviewReport=((\'Tests passed:\'+passes size asString)println.(self hasFailures or:[self hasUnsupported])ifTrue:[\'------------------------------\'println].self hasUnsupported ifTrue:[|lastCategory|(\'Unsupported optional features: \'+unsupported size asString)println.unsupported do:[:each||cat|cat:=each at:1.cat==lastCategory ifFalse:[lastCategory:=cat.(\'\t\'+cat)println].(\'\t\t\'+(each at: 2)asString)println.(\'\t\t\t\' + (each at: 3)value asString)println]].self hasFailures ifTrue:[(\'Failures: \' + failures size asString)println.failures do:[:each|(\'    \'+each key asString)println.(\'        \'+each value asString)println]])'
+    )
+  )
 })
