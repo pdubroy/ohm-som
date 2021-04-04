@@ -15,3 +15,64 @@ export function parse (source, startRule = undefined) {
   }
   return result.succeeded()
 }
+
+const semantics = somGrammar.createSemantics()
+
+semantics.addOperation('toJS', {
+  Classdef (
+    id,
+    _eq,
+    superclass,
+    instFields,
+    instMethods,
+    _sep,
+    classFields,
+    classMethods,
+    _end
+  ) {
+    return `class ${id.toJS()}{` + instFields.toJS() + instMethods.toJS() + '}'
+  },
+  identifier (first, rest) {
+    return this.sourceString
+  },
+  InstanceFields (_, variables, _end) {
+    return variables
+      .toJS()
+      .map(name => `${name};`)
+      .join(' ')
+  },
+  Method (pattern, _eq, body) {
+    const symbol = pattern.toSymbol()
+    const params = pattern.params()
+    return `'${symbol}'(${params.join(', ')}){}`
+  }
+})
+
+semantics.addOperation('toSymbol', {
+  UnaryPattern (selector) {
+    return selector.sourceString
+  },
+  BinaryPattern (selector, _) {
+    return selector.sourceString
+  },
+  KeywordPattern (keywords, _) {
+    return keywords.children.map(c => c.sourceString).join('')
+  }
+})
+
+semantics.addOperation('params', {
+  UnaryPattern (_) {
+    return []
+  },
+  BinaryPattern (_, param) {
+    return [param.toJS()]
+  },
+  KeywordPattern (_, params) {
+    return params.toJS()
+  }
+})
+
+export function compile (source, startRule = undefined) {
+  const result = somGrammar.match(source, startRule)
+  return semantics(result).toJS()
+}

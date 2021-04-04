@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { parse } from './parser.mjs'
+import { parse, compile } from './parser.mjs'
 
 const parseMethod = source => parse(source, 'Method')
 
@@ -101,7 +101,11 @@ test('real-world methods', t => {
 test('minimized source code', t => {
   t.true(
     parseMethod(
-      'overviewReport=((\'Tests passed:\'+passes size asString)println.(self hasFailures or:[self hasUnsupported])ifTrue:[\'------------------------------\'println].self hasUnsupported ifTrue:[|lastCategory|(\'Unsupported optional features: \'+unsupported size asString)println.unsupported do:[:each||cat|cat:=each at:1.cat==lastCategory ifFalse:[lastCategory:=cat.(\'\t\'+cat)println].(\'\t\t\'+(each at: 2)asString)println.(\'\t\t\t\' + (each at: 3)value asString)println]].self hasFailures ifTrue:[(\'Failures: \' + failures size asString)println.failures do:[:each|(\'    \'+each key asString)println.(\'        \'+each value asString)println]])'
+      "overviewReport=(('Tests passed:'+passes size asString)println.(self hasFailures or:[self hasUnsupported])ifTrue:['------------------------------'println].self hasUnsupported ifTrue:[|lastCategory|('Unsupported optional features: '+unsupported size asString)println.unsupported do:[:each||cat|cat:=each at:1.cat==lastCategory ifFalse:[lastCategory:=cat.('\t'+cat)println].('\t\t'+(each at: 2)asString)println.('\t\t\t' + (each at: 3)value asString)println]].self hasFailures ifTrue:[('Failures: ' + failures size asString)println.failures do:[:each|('    '+each key asString)println.('        '+each value asString)println]])"
     )
   )
+})
+
+test('basic compilation', t => {
+  t.is(compile('Dog = (run = ())'), "class Dog{'run'(){}}")
 })
