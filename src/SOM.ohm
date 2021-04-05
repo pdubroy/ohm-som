@@ -1,3 +1,8 @@
+/*
+  Ohm grammar for SOM (som-st.github.io), a minimal Smalltalk for teaching and research.
+
+  Based on https://github.com/SOM-st/SOM/blob/190fd72d5509bbfd5c190d3ed091920565cf79ae/specification/SOM.g4
+ */
 SOM {
     Classdef =
       identifier equal Superclass InstanceFields Method* (separator ClassFields Method*)? endTerm
