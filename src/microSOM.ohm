@@ -1,153 +1,106 @@
 SOM {
     Classdef =
-        identifier equal Superclass InstanceFields Method* (separator ClassFields Method*)? endTerm
+      identifier equal Superclass InstanceFields Method* (separator ClassFields Method*)? endTerm
 
-    Superclass =
-        identifier? newTerm
+    Superclass = identifier? newTerm
 
-    InstanceFields =
-        ( or variable* or )?
+    InstanceFields = (or identifier* or)?
 
-    ClassFields =
-        ( or variable* or )?
+    ClassFields = (or identifier* or)?
 
     Method = Pattern equal (primitive | MethodBlock)
 
-    Pattern =
-        UnaryPattern | BinaryPattern | KeywordPattern
+    Pattern = UnaryPattern | BinaryPattern | KeywordPattern
 
-    UnaryPattern = 
-        unarySelector
+    UnaryPattern = unarySelector
 
-    BinaryPattern =
-        binarySelector argument
+    BinaryPattern = binarySelector identifier
 
-    KeywordPattern =
-        (keyword argument)+
+    KeywordPattern = (keyword identifier)+
 
-    MethodBlock =
-        newTerm BlockContents? endTerm
+    MethodBlock = newTerm BlockContents? endTerm
 
-    unarySelector =
-        (primitive | identifier) ~colon
+    BlockContents = (or LocalDefs or)? BlockBody
 
-    binarySelector = operatorSequence |
-        or | comma | minus | equal | not | and | star | div | mod | plus | more |
-        less | at | per
-
-    argument = variable
-
-    BlockContents =
-        (or LocalDefs or)? BlockBody
-
-    LocalDefs =
-        variable*
+    LocalDefs = identifier*
 
     BlockBody =
-          exit Result  -- return
-        | Expression ( period BlockBody? )? -- rec
+      | exit Result  -- return
+      | Expression ( period BlockBody? )? -- rec
 
-    Result =
-        Expression period?
+    Result = Expression period?
 
-    Expression =
-        Assignation | Evaluation
+    Expression = Assignation | Evaluation
 
-    Assignation =
-        Assignments Evaluation
+    Assignation = Assignments Evaluation
 
-    Assignments =
-        Assignment+
+    Assignments = Assignment+
 
-    Assignment =
-        variable assign
+    Assignment = identifier assign
 
-    Evaluation =
-        Primary Messages?
+    Evaluation = Primary Messages?
 
-    Primary =
-        variable | NestedTerm | NestedBlock | Literal
-
-    variable = identifier
+    Primary = identifier | NestedTerm | NestedBlock | Literal
 
     // TODO(pdubroy): Make this recursive instead?
     Messages =
-        | UnaryMessage+ BinaryMessage* KeywordMessage?  -- unaryFirst
-        | BinaryMessage+ KeywordMessage?  -- binaryFirst
-        | KeywordMessage
+      | UnaryMessage+ BinaryMessage* KeywordMessage?  -- unaryFirst
+      | BinaryMessage+ KeywordMessage?  -- binaryFirst
+      | KeywordMessage
 
-    UnaryMessage =
-        unarySelector
+    UnaryMessage = unarySelector
 
-    BinaryMessage =
-        binarySelector BinaryOperand
+    BinaryMessage = binarySelector BinaryOperand
 
-    BinaryOperand =
-        Primary UnaryMessage*
+    BinaryOperand = Primary UnaryMessage*
 
-    KeywordMessage =
-        ( keyword Formula )+
+    KeywordMessage = (keyword Formula)+
 
-    Formula =
-        BinaryOperand BinaryMessage*
+    Formula = BinaryOperand BinaryMessage*
 
-    NestedTerm =
-        newTerm Expression endTerm
+    NestedTerm = newTerm Expression endTerm
 
-    Literal =
-        LiteralArray | LiteralSymbol | LiteralString | LiteralNumber
+    Literal = LiteralArray | LiteralSymbol | LiteralString | LiteralNumber
 
-    LiteralArray =
-        pound newTerm Literal* endTerm
+    LiteralArray = pound newTerm Literal* endTerm
 
-    LiteralNumber =
-        NegativeDecimal | LiteralDecimal
+    LiteralNumber = NegativeDecimal | LiteralDecimal
 
-    LiteralDecimal =
-        LiteralDouble | LiteralInteger
+    LiteralDecimal = LiteralDouble | LiteralInteger
 
-    NegativeDecimal =
-        minus LiteralDecimal
+    NegativeDecimal = minus LiteralDecimal
 
-    LiteralInteger =
-        integer
+    LiteralInteger = integer
 
-    LiteralDouble =
-        double
+    LiteralDouble = double
 
-    LiteralSymbol =
-        pound ( string | selector )
+    LiteralSymbol = pound (string | selector)
 
-    LiteralString =
-        string
+    LiteralString = string
 
-    selector =
-        binarySelector | keywordSelector | unarySelector
+    NestedBlock = newBlock BlockPattern? BlockContents? endBlock
 
-    keywordSelector =
-        keywordSequence | keyword  // TODO(pdubroy): Remove alternation here, 'keyword' is redundant.
+    BlockPattern = BlockArguments or
 
-    string =
-        stString
+    BlockArguments = (colon identifier)+
 
-    NestedBlock =
-        newBlock BlockPattern? BlockContents? endBlock
+    // Lexical rules
 
-    BlockPattern =
-        BlockArguments or
+    selector = unarySelector | binarySelector | keywordSelector
 
-    BlockArguments =
-        ( colon argument )+
-
-    // Lexer
+    unarySelector = (primitive | identifier) ~colon
+    binarySelector = operatorSequence | operator
+    keywordSelector = keyword+
+    keyword = identifier colon
 
     comment = quote (~quote any)* quote
     quote = "\""
     space += comment
 
-    primitive = "primitive" ~idRest
     identifier = letter idRest*
     idRest = letter | digit | "_"
+
+    primitive = "primitive" ~idRest
 
     equal = "="
 
@@ -159,48 +112,42 @@ SOM {
 
     comma = ","
     minus = "-"
-    not =   "~"
-    and =   "&"
-    star =  "*"
-    div =   "/"
-    mod =   "\\"
-    plus =  "+"
-    more =  ">"
-    less =  "<"
-    at =    "@"
-    per =   "%"
+    not = "~"
+    and = "&"
+    star = "*"
+    div = "/"
+    mod = "\\"
+    plus = "+"
+    more = ">"
+    less = "<"
+    at = "@"
+    per = "%"
 
-    operatorSequence = (
-        not | and | or | star | div |
-        mod | plus | equal | more | less |
-        comma | at | per | minus )+
-
-    colon = ":"
+    operator =
+      not | and | or | star | div | mod | plus | equal | more | less | comma | at | per | minus
+    operatorSequence = operator+
 
     newBlock = "["
     endBlock = "]"
 
+    colon = ":"
     pound = "#"
-
     exit = "^"
     period = "."
     assign = ":="
 
     integer = digit+
     double = digit+ "." digit+
-    keyword = identifier colon
-    keywordSequence = keyword+
-    stString =
-        "'"
-        (   "\\t"
-          | "\\b"
-          | "\\n"
-          | "\\r"
-          | "\\f"
-          | "\\0"
-          | "\\'"
-          | "\\\\"
-          | ~("'" | "\\") any
-        )*
-        "'"
+
+    string = "'" (escapeChar | ~("'" | "\\") any)* "'"
+
+    escapeChar (an escape sequence) =
+      | "\\t"  -- tab
+      | "\\b"  -- backspace
+      | "\\n"  -- lineFeed
+      | "\\r"  -- carriageReturn
+      | "\\f"  -- formFeed
+      | "\\0"  -- null
+      | "\\\'"  -- singleQuote
+      | "\\\\"  -- backslash
 }
