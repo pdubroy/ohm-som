@@ -4,9 +4,7 @@ import path from 'path'
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
 
-const somGrammar = ohm.grammar(
-  fs.readFileSync(path.join(__dirname, 'microSOM.ohm'))
-)
+const somGrammar = ohm.grammar(fs.readFileSync(path.join(__dirname, 'SOM.ohm')))
 
 export function parse (source, startRule = undefined) {
   const result = somGrammar.match(source, startRule)
@@ -44,7 +42,43 @@ semantics.addOperation('toJS', {
   Method (pattern, _eq, body) {
     const symbol = pattern.toSymbol()
     const params = pattern.params()
-    return `'${symbol}'(${params.join(', ')}){}`
+    return `'${symbol}'(${params.join(', ')}){${body.toJS()}}`
+  },
+  MethodBlock (_open, blockContentsOpt, _close) {
+    return blockContentsOpt.toJS().join('')
+  },
+  BlockContents (_or, localDefsOpt, _, blockBody) {
+    return localDefsOpt.toJS().join('') + blockBody.toJS()
+  },
+  LocalDefs (identifiers) {
+    return `let ${identifiers.toJS().join(',')};`
+  },
+  BlockBody_return (_, result) {
+    return `return ${result.toJS()}`
+  },
+  BlockBody_rec (exp, _, blockBodyIter) {
+    return [exp.toJS(), ...blockBodyIter.toJS()].join(';')
+  },
+  Assignation (assignments, evaluation) {
+    return `${assignments.toJS()}${evaluation.toJS()}`
+  },
+  Assignment (identifier, _) {
+    return `${identifier.toJS()}=`
+  },
+  Result (exp, _) {
+    return exp.toJS()
+  },
+  Evaluation (primary, messagesOpt) {
+    const target = primary.toJS()
+    if (messagesOpt._node.hasChildren()) {
+      // TODO: handle message send
+      messagesOpt.toJS() // trigger eval
+    } else {
+      return target
+    }
+  },
+  LiteralNumber (_) {
+    return `Number(${this.sourceString})`
   }
 })
 

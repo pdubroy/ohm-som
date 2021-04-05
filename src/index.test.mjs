@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { parse, compile } from './parser.mjs'
+import { parse, compile } from './index.mjs'
 
 const parseMethod = source => parse(source, 'Method')
 
@@ -98,6 +98,16 @@ test('real-world methods', t => {
   )
 })
 
+test('special cases', t => {
+  t.throws(
+    () => parseMethod('x = (^3. y := 4)'),
+    null,
+    'return not in trailing position'
+  )
+  t.throws(() => parseMethod('x = (^3. ^4)'), null, 'multiple returns')
+  t.true(parseMethod('x = (^3.)'), 'trailing period')
+})
+
 test('minimized source code', t => {
   t.true(
     parseMethod(
@@ -106,6 +116,21 @@ test('minimized source code', t => {
   )
 })
 
-test('basic compilation', t => {
+test('compiling class and method definitions', t => {
   t.is(compile('Dog = (run = ())'), "class Dog{'run'(){}}")
+  t.is(
+    compile('Dog = (barkAt: x and: y = ())'),
+    "class Dog{'barkAt:and:'(x, y){}}"
+  )
+  t.is(compile('Dog = (>> dist = ())'), "class Dog{'>>'(dist){}}")
+})
+
+test('compiling method bodies', t => {
+  t.is(compile('doIt = (^3)', 'Method'), "'doIt'(){return Number(3)}")
+  t.is(compile('do: x = (^x)', 'Method'), "'do:'(x){return x}")
+  t.is(compile('doIt = (| a b | ^a)', 'Method'), "'doIt'(){let a,b;return a}")
+  t.is(
+    compile('doIt = (| x | x := 3. ^x)', 'Method'),
+    "'doIt'(){let x;x=Number(3);return x}"
+  )
 })

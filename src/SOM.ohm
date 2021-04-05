@@ -26,7 +26,7 @@ SOM {
 
     BlockBody =
       | exit Result  -- return
-      | Expression ( period BlockBody? )? -- rec
+      | Expression (period BlockBody?)? -- rec
 
     Result = Expression period?
 

@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import walkSync from 'walk-sync'
 
-import { parse } from '../src/parser.mjs'
+import { parse } from '../src/index.mjs'
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
 const somTestSuitePath = path.join(__dirname, 'data/SOM/TestSuite')
