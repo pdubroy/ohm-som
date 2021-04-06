@@ -2,6 +2,7 @@
   Ohm grammar for SOM (som-st.github.io), a minimal Smalltalk for teaching and research.
 
   Based on https://github.com/SOM-st/SOM/blob/190fd72d5509bbfd5c190d3ed091920565cf79ae/specification/SOM.g4
+  with some inspiration from https://github.com/moosetechnology/PetitParser/blob/development/src/PetitSmalltalk/PPSmalltalkGrammar.class.st
  */
 SOM {
     Classdef =
@@ -35,33 +36,27 @@ SOM {
 
     Result = Expression period?
 
-    Expression = Assignation | Evaluation
+    Expression =
+      | identifier assign Expression  -- assignment
+      | KeywordExpression
 
-    Assignation = Assignments Evaluation
+    KeywordExpression = BinaryExpression KeywordMessage?
 
-    Assignments = Assignment+
+    KeywordMessage = (keyword BinaryExpression)+
 
-    Assignment = identifier assign
+    BinaryExpression =
+      | BinaryExpression BinaryMessage  -- rec
+      | UnaryExpression
 
-    Evaluation = Primary Messages?
+    BinaryMessage = binarySelector UnaryExpression
 
-    Primary = identifier | NestedTerm | NestedBlock | Literal
-
-    // TODO(pdubroy): Make this recursive instead?
-    Messages =
-      | UnaryMessage+ BinaryMessage* KeywordMessage?  -- unaryFirst
-      | BinaryMessage+ KeywordMessage?  -- binaryFirst
-      | KeywordMessage
+    UnaryExpression =
+      | UnaryExpression UnaryMessage  -- rec
+      | Primary
 
     UnaryMessage = unarySelector
 
-    BinaryMessage = binarySelector BinaryOperand
-
-    BinaryOperand = Primary UnaryMessage*
-
-    KeywordMessage = (keyword Formula)+
-
-    Formula = BinaryOperand BinaryMessage*
+    Primary = identifier | NestedTerm | NestedBlock | Literal
 
     NestedTerm = newTerm Expression endTerm
 

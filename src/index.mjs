@@ -59,23 +59,20 @@ semantics.addOperation('toJS', {
   BlockBody_rec (exp, _, blockBodyIter) {
     return [exp.toJS(), ...blockBodyIter.toJS()].join(';')
   },
-  Assignation (assignments, evaluation) {
-    return `${assignments.toJS()}${evaluation.toJS()}`
+  Expression_assignment (ident, _, exp) {
+    return `${ident.toJS()}=${exp.toJS()}`
   },
-  Assignment (identifier, _) {
-    return `${identifier.toJS()}=`
+  KeywordExpression (binaryExp, keywordMessageOpt) {
+    const receiver = binaryExp.toJS()
+    if (keywordMessageOpt._node.hasChildren()) {
+      // TODO: Handle message send
+      keywordMessageOpt.toJS() // trigger eval
+    } else {
+      return receiver
+    }
   },
   Result (exp, _) {
     return exp.toJS()
-  },
-  Evaluation (primary, messagesOpt) {
-    const target = primary.toJS()
-    if (messagesOpt._node.hasChildren()) {
-      // TODO: handle message send
-      messagesOpt.toJS() // trigger eval
-    } else {
-      return target
-    }
   },
   LiteralNumber (_) {
     return `Number(${this.sourceString})`

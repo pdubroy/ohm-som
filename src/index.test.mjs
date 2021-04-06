@@ -115,8 +115,7 @@ test('minimized source code', t => {
     )
   )
 })
-
-test('compiling class and method definitions', t => {
+test('codegen: class and method definitions', t => {
   t.is(compile('Dog = (run = ())'), "class Dog{'run'(){}}")
   t.is(
     compile('Dog = (barkAt: x and: y = ())'),
@@ -125,7 +124,7 @@ test('compiling class and method definitions', t => {
   t.is(compile('Dog = (>> dist = ())'), "class Dog{'>>'(dist){}}")
 })
 
-test('compiling method bodies', t => {
+test('codgen: method bodies', t => {
   t.is(compile('doIt = (^3)', 'Method'), "'doIt'(){return Number(3)}")
   t.is(compile('do: x = (^x)', 'Method'), "'do:'(x){return x}")
   t.is(compile('doIt = (| a b | ^a)', 'Method'), "'doIt'(){let a,b;return a}")
