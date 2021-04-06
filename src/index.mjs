@@ -40,9 +40,9 @@ semantics.addOperation('toJS', {
       .join(' ')
   },
   Method (pattern, _eq, body) {
-    const symbol = pattern.toSymbol()
+    const selector = pattern.selector()
     const params = pattern.params()
-    return `'${symbol}'(${params.join(', ')}){${body.toJS()}}`
+    return `'${selector}'(${params.join(', ')}){${body.toJS()}}`
   },
   MethodBlock (_open, blockContentsOpt, _close) {
     return blockContentsOpt.toJS().join('')
@@ -62,32 +62,95 @@ semantics.addOperation('toJS', {
   Expression_assignment (ident, _, exp) {
     return `${ident.toJS()}=${exp.toJS()}`
   },
-  KeywordExpression (binaryExp, keywordMessageOpt) {
-    const receiver = binaryExp.toJS()
-    if (keywordMessageOpt._node.hasChildren()) {
-      // TODO: Handle message send
-      keywordMessageOpt.toJS() // trigger eval
-    } else {
-      return receiver
-    }
+  KeywordExpression_rec (exp, message) {
+    const { selector, args } = message.selectorAndArgsToJS()
+    return `send(${exp.toJS()},${selector},${args})`
+  },
+  BinaryExpression_rec (exp, message) {
+    const { selector, args } = message.selectorAndArgsToJS()
+    return `send(${exp.toJS()},${selector},${args})`
+  },
+  UnaryExpression_rec (exp, message) {
+    const { selector, args } = message.selectorAndArgsToJS()
+    return `send(${exp.toJS()},${selector},${args})`
   },
   Result (exp, _) {
     return exp.toJS()
   },
-  LiteralNumber (_) {
-    return `Number(${this.sourceString})`
+  LiteralArray (_, _open, literalIter, _close) {
+    return `[${literalIter.toJS().join(',')}]`
+  },
+  LiteralNumber_double (_, double) {
+    return `$Double(${this.sourceString})`
+  },
+  LiteralNumber_int (_, integer) {
+    return `$Integer(${this.sourceString})`
+  },
+  LiteralSymbol (_, stringOrSelector) {
+    return `$Symbol(${stringOrSelector.asString()})`
+  },
+  LiteralString (str) {
+    return `$String(${str.asString()})`
   }
 })
 
-semantics.addOperation('toSymbol', {
+semantics.addOperation('selectorAndArgsToJS', {
+  KeywordMessage (keywordIter, binaryExpIter) {
+    return {
+      selector: `'${this.selector()}'`,
+      args: `[${binaryExpIter.toJS()}]`
+    }
+  },
+  BinaryMessage (selector, exp) {
+    return {
+      selector: `'${this.selector()}'`,
+      args: `[${exp.toJS()}]`
+    }
+  },
+  UnaryMessage (selector) {
+    return {
+      selector: `'${this.selector()}'`,
+      args: '[]'
+    }
+  }
+})
+
+semantics.addOperation('selector', {
   UnaryPattern (selector) {
+    return selector.sourceString
+  },
+  UnaryMessage (selector) {
     return selector.sourceString
   },
   BinaryPattern (selector, _) {
     return selector.sourceString
   },
-  KeywordPattern (keywords, _) {
-    return keywords.children.map(c => c.sourceString).join('')
+  BinaryMessage (selector, _) {
+    return selector.sourceString
+  },
+  KeywordPattern (keywordIter, _) {
+    return keywordIter.children.map(c => c.sourceString).join('')
+  },
+  KeywordMessage (keywordIter, _) {
+    return keywordIter.children.map(c => c.sourceString).join('')
+  }
+})
+
+semantics.addOperation('asString', {
+  keyword (ident, _) {
+    return `'${this.sourceString}'`
+  },
+  unarySelector (_) {
+    return `'${this.sourceString}'`
+  },
+  binarySelector (_) {
+    return `'${this.sourceString}'`
+  },
+  keywordSelector (keywordIter) {
+    return `'${this.sourceString}'`
+  },
+  string (_open, charIter, _close) {
+    return this.sourceString
   }
 })
 

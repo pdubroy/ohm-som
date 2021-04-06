@@ -40,7 +40,9 @@ SOM {
       | identifier assign Expression  -- assignment
       | KeywordExpression
 
-    KeywordExpression = BinaryExpression KeywordMessage?
+    KeywordExpression =
+      | KeywordExpression KeywordMessage  -- rec
+      | BinaryExpression
 
     KeywordMessage = (keyword BinaryExpression)+
 
@@ -64,15 +66,9 @@ SOM {
 
     LiteralArray = pound newTerm Literal* endTerm
 
-    LiteralNumber = NegativeDecimal | LiteralDecimal
-
-    LiteralDecimal = LiteralDouble | LiteralInteger
-
-    NegativeDecimal = minus LiteralDecimal
-
-    LiteralInteger = integer
-
-    LiteralDouble = double
+    LiteralNumber =
+      | minus? double  -- double
+      | minus? integer  -- int
 
     LiteralSymbol = pound (string | selector)
 

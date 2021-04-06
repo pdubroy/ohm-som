@@ -115,6 +115,7 @@ test('minimized source code', t => {
     )
   )
 })
+
 test('codegen: class and method definitions', t => {
   t.is(compile('Dog = (run = ())'), "class Dog{'run'(){}}")
   t.is(
@@ -125,11 +126,39 @@ test('codegen: class and method definitions', t => {
 })
 
 test('codgen: method bodies', t => {
-  t.is(compile('doIt = (^3)', 'Method'), "'doIt'(){return Number(3)}")
+  t.is(compile('doIt = (^3)', 'Method'), "'doIt'(){return $Integer(3)}")
   t.is(compile('do: x = (^x)', 'Method'), "'do:'(x){return x}")
   t.is(compile('doIt = (| a b | ^a)', 'Method'), "'doIt'(){let a,b;return a}")
   t.is(
     compile('doIt = (| x | x := 3. ^x)', 'Method'),
-    "'doIt'(){let x;x=Number(3);return x}"
+    "'doIt'(){let x;x=$Integer(3);return x}"
   )
+})
+
+test('codegen: message sends', t => {
+  //  '4 between: 1 + 1 and: 64 sqrt', 'BlockBody'),
+  t.is(
+    compile('4 between: 2 and: 3', 'BlockBody'),
+    "send($Integer(4),'between:and:',[$Integer(2),$Integer(3)])"
+  )
+  t.is(
+    compile('4 + 1 between: 2 and: 3', 'BlockBody'),
+    "send(send($Integer(4),'+',[$Integer(1)]),'between:and:',[$Integer(2),$Integer(3)])"
+  )
+  t.is(
+    compile('16 sqrt + 1 between: 2 negated and: 8 + 1 ', 'BlockBody'),
+    "send(send(send($Integer(16),'sqrt',[]),'+',[$Integer(1)]),'between:and:',[send($Integer(2),'negated',[]),send($Integer(8),'+',[$Integer(1)])])"
+  )
+})
+
+test('codegen: literals', t => {
+  t.is(compile('#between:and:', 'Expression'), "$Symbol('between:and:')")
+  t.is(compile("#'x'", 'Expression'), "$Symbol('x')")
+
+  t.is(compile("''", 'Expression'), "$String('')")
+
+  t.is(compile('4', 'Expression'), '$Integer(4)')
+  t.is(compile('-3.14', 'Expression'), '$Double(-3.14)')
+
+  t.is(compile("#(4 'hey')", 'Expression'), "[$Integer(4),$String('hey')]")
 })
