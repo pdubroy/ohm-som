@@ -162,3 +162,21 @@ test('codegen: literals', t => {
 
   t.is(compile("#(4 'hey')", 'Expression'), "[$Integer(4),'hey']")
 })
+
+test('codegen: blocks', t => {
+  // TODO: Implement non-local return.
+  t.is(compile('[]', 'Expression'), '()=>{}')
+  t.is(compile('[:x|]', 'Expression'), '(x)=>{}')
+  t.is(compile('[:x:y|]', 'Expression'), '(x,y)=>{}')
+  t.is(compile('[:x:y|]', 'Expression'), '(x,y)=>{}')
+  t.is(compile('[:x:y|^3.0]', 'Expression'), '(x,y)=>{return 3.0}')
+})
+
+test('codegen: other expressions', t => {
+  t.is(compile('x:=y := 3.0', 'Expression'), 'x=y=3.0', 'assignment')
+  t.is(
+    compile('x:=(3.0) + ((4.0))', 'Expression'),
+    "x=send(3.0,'+',[4.0])",
+    'nested terms'
+  )
+})

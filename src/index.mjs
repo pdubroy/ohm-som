@@ -77,6 +77,18 @@ semantics.addOperation('toJS', {
   Result (exp, _) {
     return exp.toJS()
   },
+  NestedTerm (_open, exp, _close) {
+    return exp.toJS()
+  },
+  NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
+    return `(${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}}`
+  },
+  BlockPattern (blockArguments, _) {
+    return blockArguments.toJS()
+  },
+  BlockArguments (_, identIter) {
+    return identIter.toJS().join(',')
+  },
   LiteralArray (_, _open, literalIter, _close) {
     return `[${literalIter.toJS().join(',')}]`
   },
