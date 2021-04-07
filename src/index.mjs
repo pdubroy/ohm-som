@@ -81,7 +81,7 @@ semantics.addOperation('toJS', {
     return `[${literalIter.toJS().join(',')}]`
   },
   LiteralNumber_double (_, double) {
-    return `$Double(${this.sourceString})`
+    return `${this.sourceString}`
   },
   LiteralNumber_int (_, integer) {
     return `$Integer(${this.sourceString})`
@@ -90,7 +90,7 @@ semantics.addOperation('toJS', {
     return `$Symbol(${stringOrSelector.asString()})`
   },
   LiteralString (str) {
-    return `$String(${str.asString()})`
+    return `${str.asString()}`
   }
 })
 

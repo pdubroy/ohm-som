@@ -155,10 +155,10 @@ test('codegen: literals', t => {
   t.is(compile('#between:and:', 'Expression'), "$Symbol('between:and:')")
   t.is(compile("#'x'", 'Expression'), "$Symbol('x')")
 
-  t.is(compile("''", 'Expression'), "$String('')")
+  t.is(compile("''", 'Expression'), "''")
 
   t.is(compile('4', 'Expression'), '$Integer(4)')
-  t.is(compile('-3.14', 'Expression'), '$Double(-3.14)')
+  t.is(compile('-3.14', 'Expression'), '-3.14')
 
-  t.is(compile("#(4 'hey')", 'Expression'), "[$Integer(4),$String('hey')]")
+  t.is(compile("#(4 'hey')", 'Expression'), "[$Integer(4),'hey']")
 })
