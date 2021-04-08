@@ -6,17 +6,19 @@ import { Integer } from './Integer.mjs'
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
 
-const somGrammar = ohm.grammar(fs.readFileSync(path.join(__dirname, 'SOM.ohm')))
+export const grammar = ohm.grammar(
+  fs.readFileSync(path.join(__dirname, 'SOM.ohm'))
+)
 
 export function parse (source, startRule = undefined) {
-  const result = somGrammar.match(source, startRule)
+  const result = grammar.match(source, startRule)
   if (result.failed()) {
     throw new Error(result.message)
   }
   return result.succeeded()
 }
 
-const semantics = somGrammar.createSemantics()
+export const semantics = grammar.createSemantics()
 
 semantics.addOperation('toJS', {
   Classdef (
@@ -181,17 +183,18 @@ semantics.addOperation('params', {
 })
 
 export function compile (source, startRule = undefined) {
-  const result = somGrammar.match(source, startRule)
+  const result = grammar.match(source, startRule)
   return semantics(result).toJS()
 }
 
 export function doIt (source, startRule = undefined) {
+  // eslint-disable-next-line no-new-func
   const main = new Function('$som', compile(source, startRule))
   return main(globalEnv)
 }
 
 const globalEnv = {
-  send (receiver, selector, args) {
+  send: function send (receiver, selector, args) {
     const method = receiver[selector]
     if (method) {
       return method.call(receiver, ...args)

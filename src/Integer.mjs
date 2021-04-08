@@ -1,5 +1,4 @@
 export class Integer {
-
   constructor (val) {
     this.val = val
   }
