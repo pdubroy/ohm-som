@@ -2,6 +2,8 @@ import fs from 'fs'
 import ohm from 'ohm-js'
 import path from 'path'
 
+import { Integer } from './Integer.mjs'
+
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
 
 const somGrammar = ohm.grammar(fs.readFileSync(path.join(__dirname, 'SOM.ohm')))
@@ -64,15 +66,15 @@ semantics.addOperation('toJS', {
   },
   KeywordExpression_rec (exp, message) {
     const { selector, args } = message.selectorAndArgsToJS()
-    return `send(${exp.toJS()},${selector},${args})`
+    return `$som.send(${exp.toJS()},${selector},${args})`
   },
   BinaryExpression_rec (exp, message) {
     const { selector, args } = message.selectorAndArgsToJS()
-    return `send(${exp.toJS()},${selector},${args})`
+    return `$som.send(${exp.toJS()},${selector},${args})`
   },
   UnaryExpression_rec (exp, message) {
     const { selector, args } = message.selectorAndArgsToJS()
-    return `send(${exp.toJS()},${selector},${args})`
+    return `$som.send(${exp.toJS()},${selector},${args})`
   },
   Result (exp, _) {
     return exp.toJS()
@@ -96,10 +98,10 @@ semantics.addOperation('toJS', {
     return `${this.sourceString}`
   },
   LiteralNumber_int (_, integer) {
-    return `$Integer(${this.sourceString})`
+    return `$som.Integer(${this.sourceString})`
   },
   LiteralSymbol (_, stringOrSelector) {
-    return `$Symbol(${stringOrSelector.asString()})`
+    return `$som.Symbol(${stringOrSelector.asString()})`
   },
   LiteralString (str) {
     return `${str.asString()}`
@@ -181,4 +183,25 @@ semantics.addOperation('params', {
 export function compile (source, startRule = undefined) {
   const result = somGrammar.match(source, startRule)
   return semantics(result).toJS()
+}
+
+export function doIt (source, startRule = undefined) {
+  const main = new Function('$som', compile(source, startRule))
+  return main(globalEnv)
+}
+
+const globalEnv = {
+  send (receiver, selector, args) {
+    const method = receiver[selector]
+    if (method) {
+      return method.call(receiver, ...args)
+    } else {
+      return send(receiver, 'doesNotUnderstand:arguments:', [
+        selector,
+        arguments
+      ])
+    }
+  },
+  Integer: str => Integer['fromString:'](str),
+  Symbol: str => Symbol.for(str)
 }
