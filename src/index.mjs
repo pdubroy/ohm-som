@@ -1,49 +1,75 @@
 import fs from 'fs'
 import ohm from 'ohm-js'
-import path from 'path'
 
-import { Integer } from './Integer.mjs'
+import { somGrammarPath } from './paths.mjs'
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname)
-
-export const grammar = ohm.grammar(
-  fs.readFileSync(path.join(__dirname, 'SOM.ohm'))
-)
-
-export function parse (source, startRule = undefined) {
-  const result = grammar.match(source, startRule)
-  if (result.failed()) {
-    throw new Error(result.message)
-  }
-  return result.succeeded()
-}
+export const grammar = ohm.grammar(fs.readFileSync(somGrammarPath))
 
 export const semantics = grammar.createSemantics()
 
+semantics.addOperation('className', {
+  Classdef (id, eq, superclass, instSlots, sep, classSlots, end) {
+    return id.sourceString
+  }
+})
+
+semantics.addOperation('superclassName', {
+  Classdef (id, eq, superclass, instSlots, sep, classSlots, end) {
+    return superclass.superclassName()
+  },
+  Superclass (idOpt, _) {
+    return idOpt.child(0) && idOpt.child(0).sourceString
+  }
+})
+
+// Return `true` if the method is a primitive method, and `false` otherwise.
+semantics.addOperation('isPrimitive', {
+  Method (pattern, _, primitiveOrMethodBlock) {
+    return primitiveOrMethodBlock.isPrimitive()
+  },
+  primitive (_) {
+    return true
+  },
+  MethodBlock (_, blockContents, _end) {
+    return false
+  }
+})
+
 semantics.addOperation('toJS', {
-  Classdef (
-    id,
-    _eq,
-    superclass,
-    instFields,
-    instMethods,
-    _sep,
-    classFields,
-    classMethods,
-    _end
-  ) {
-    return `class ${id.toJS()}{` + instFields.toJS() + instMethods.toJS() + '}'
+  Classdef (id, _, superclass, instSlots, _sep, classSlotsOpt, _end) {
+    const classDecl = [
+      `class ${id.toJS()} extends $som.superclass {` + instSlots.toJS() + '}'
+    ].join('')
+    if (classSlotsOpt._node.hasChildren()) {
+      const statics = `${classSlotsOpt.toJS()}`
+      return `Object.assign(${classDecl},${statics})`
+    } else {
+      return classDecl
+    }
   },
   identifier (first, rest) {
     return this.sourceString
   },
-  InstanceFields (_, variables, _end) {
-    return variables
-      .toJS()
-      .map(name => `${name};`)
-      .join(' ')
+  InstanceSlots (_, identIter, _end, methodIter) {
+    return (
+      identIter
+        .toJS()
+        .map(name => `${name};`)
+        .join('\n') + methodIter.toJS().join('\n')
+    )
+  },
+  ClassSlots (_, identOpt, _end, methodIter) {
+    let props = []
+    if (identOpt._node.hasChildren()) {
+      props = identOpt.toJS()[0].map(name => `${name}: undefined`)
+    }
+    const methods = methodIter.toJS()
+    return '{' + [...props, ...methods].join(',') + '}'
   },
   Method (pattern, _eq, body) {
+    if (body.isPrimitive()) {
+      return ''
+    }
     const selector = pattern.selector()
     const params = pattern.params()
     return `'${selector}'(${params.join(', ')}){${body.toJS()}}`
@@ -132,6 +158,9 @@ semantics.addOperation('selectorAndArgsToJS', {
 })
 
 semantics.addOperation('selector', {
+  Method (pattern, _eq, _) {
+    return pattern.selector()
+  },
   UnaryPattern (selector) {
     return selector.sourceString
   },
@@ -187,24 +216,16 @@ export function compile (source, startRule = undefined) {
   return semantics(result).toJS()
 }
 
-export function doIt (source, startRule = undefined) {
-  // eslint-disable-next-line no-new-func
-  const main = new Function('$som', compile(source, startRule))
-  return main(globalEnv)
-}
-
-const globalEnv = {
-  send: function send (receiver, selector, args) {
-    const method = receiver[selector]
-    if (method) {
-      return method.call(receiver, ...args)
-    } else {
-      return send(receiver, 'doesNotUnderstand:arguments:', [
-        selector,
-        arguments
-      ])
-    }
-  },
-  Integer: str => Integer['fromString:'](str),
-  Symbol: str => Symbol.for(str)
+export function compileClass (source, env) {
+  const result = grammar.match(source)
+  if (result.failed()) {
+    throw new Error(result.message)
+  }
+  // TODO: Use `env` to ensure there are no undefined references.
+  const root = semantics(result)
+  return {
+    className: root.className(),
+    superclassName: root.superclassName(),
+    js: root.toJS()
+  }
 }

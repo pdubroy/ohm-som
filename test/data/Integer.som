@@ -1,0 +1,20 @@
+"
+A stripped-down version of the Integer class.
+"
+
+Integer = (
+
+    "Arithmetic"
+    + argument  = primitive
+    - argument  = primitive
+    
+    "Comparing"
+    =  argument = primitive
+    
+    "Converting"
+    asString    = primitive
+    ----
+    
+    fromString: aString = primitive
+    
+)

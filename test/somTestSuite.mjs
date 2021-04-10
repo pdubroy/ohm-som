@@ -4,12 +4,7 @@ import path from 'path'
 import walkSync from 'walk-sync'
 
 import { compile } from '../src/index.mjs'
-
-const __dirname = path.dirname(new URL(import.meta.url).pathname)
-const somTestSuitePath = path.join(
-  __dirname,
-  '../third_party/SOM-st/SOM/TestSuite'
-)
+import { somTestSuitePath } from '../src/paths.mjs'
 
 // An AVA "macro function" that tests that the SOM source file at `filename` can be parsed.
 function testSourceFile (t, filename) {

@@ -1,4 +1,4 @@
-export class Integer {
+export class PrimitiveInteger {
   constructor (val) {
     this.val = val
   }
@@ -7,7 +7,7 @@ export class Integer {
   // ----------
 
   '+' (argument) {
-    return new Integer(this.val + argument.val)
+    return new PrimitiveInteger(this.val + argument.val)
   }
 
   '-' (argument) {
@@ -84,6 +84,7 @@ export class Integer {
   }
 }
 
-Integer['fromString:'] = function (aString) {
-  return new Integer(parseInt(aString, 10))
+PrimitiveInteger['fromString:'] = function (aString) {
+  // TODO: This is wrong! Should create an Integer, not PrimitiveInteger.
+  return new PrimitiveInteger(parseInt(aString, 10))
 }

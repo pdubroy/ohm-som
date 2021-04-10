@@ -1,8 +1,14 @@
 import test from 'ava'
 
-import { parse, compile, doIt } from './index.mjs'
+import { grammar, compile, semantics } from './index.mjs'
 
-const parseMethod = source => parse(source, 'Method')
+function parseMethod (source) {
+  const result = grammar.match(source, 'Method')
+  if (result.failed()) {
+    throw new Error(result.message)
+  }
+  return result.succeeded()
+}
 
 test('trivial method declarations', t => {
   t.true(parseMethod('empty = ()'))
@@ -116,16 +122,30 @@ test('minimized source code', t => {
   )
 })
 
-test('codegen: class and method definitions', t => {
-  t.is(compile('Dog = (run = ())'), "class Dog{'run'(){}}")
+test('operations: superclassName', t => {
   t.is(
-    compile('Dog = (barkAt: x and: y = ())'),
-    "class Dog{'barkAt:and:'(x, y){}}"
+    semantics(grammar.match('Dog = Animal(run = ())')).superclassName(),
+    'Animal'
   )
-  t.is(compile('Dog = (>> dist = ())'), "class Dog{'>>'(dist){}}")
+  t.is(semantics(grammar.match('Dog = (run = ())')).superclassName(), undefined)
 })
 
-test('codgen: method bodies', t => {
+test('codegen: class and method definitions', t => {
+  t.is(
+    compile('Dog = (run = ())'),
+    "class Dog extends $som.superclass {'run'(){}}"
+  )
+  t.is(
+    compile('Dog = (barkAt: x and: y = ())'),
+    "class Dog extends $som.superclass {'barkAt:and:'(x, y){}}"
+  )
+  t.is(
+    compile('Dog = (>> dist = ())'),
+    "class Dog extends $som.superclass {'>>'(dist){}}"
+  )
+})
+
+test('codegen: method bodies', t => {
   t.is(compile('doIt = (^3)', 'Method'), "'doIt'(){return $som.Integer(3)}")
   t.is(compile('do: x = (^x)', 'Method'), "'do:'(x){return x}")
   t.is(compile('doIt = (| a b | ^a)', 'Method'), "'doIt'(){let a,b;return a}")
@@ -179,8 +199,4 @@ test('codegen: other expressions', t => {
     "x=$som.send(3.0,'+',[4.0])",
     'nested terms'
   )
-})
-
-test('basic eval', t => {
-  t.is(doIt('^(3 + 4) asString', 'BlockContents'), '7')
 })

@@ -6,13 +6,13 @@
  */
 SOM {
     Classdef =
-      identifier equal Superclass InstanceFields Method* (separator ClassFields Method*)? endTerm
+      identifier equal Superclass InstanceSlots (separator ClassSlots)? endTerm
 
     Superclass = identifier? newTerm
 
-    InstanceFields = (or identifier* or)?
+    InstanceSlots = (or identifier* or)? Method*
 
-    ClassFields = (or identifier* or)?
+    ClassSlots = (or identifier* or)? Method*
 
     Method = Pattern equal (primitive | MethodBlock)
 
