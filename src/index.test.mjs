@@ -169,8 +169,8 @@ test('codegen: message sends', t => {
 })
 
 test('codegen: literals', t => {
-  t.is(compile('#between:and:', 'Expression'), "$som.Symbol('between:and:')")
-  t.is(compile("#'x'", 'Expression'), "$som.Symbol('x')")
+  t.is(compile('#between:and:', 'Expression'), "Symbol.for('between:and:')")
+  t.is(compile("#'x'", 'Expression'), "Symbol.for('x')")
 
   t.is(compile("''", 'Expression'), "''")
 

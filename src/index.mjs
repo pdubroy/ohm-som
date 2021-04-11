@@ -132,7 +132,7 @@ semantics.addOperation('toJS', {
     return `$som.Integer(${this.sourceString})`
   },
   LiteralSymbol (_, stringOrSelector) {
-    return `$som.Symbol(${stringOrSelector.asString()})`
+    return `Symbol.for(${stringOrSelector.asString()})`
   },
   LiteralString (str) {
     return `${str.asString()}`

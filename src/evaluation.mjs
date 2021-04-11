@@ -2,15 +2,26 @@ import fs from 'fs'
 import path from 'path'
 
 import { compileClass, compile } from './index.mjs'
+import { somClassLibPath } from './paths.mjs'
 import { PrimitiveInteger } from './primitives/PrimitiveInteger.mjs'
 
-import { somClassLibPath } from './paths.mjs'
-
-export class ExecutionContext {
+export class Environment {
   constructor () {
-    this.classes = Object.create(null)
+    this.bindings = new Map()
 
-    this.loadClass(path.join(somClassLibPath, 'Integer.som'), PrimitiveInteger)
+    const Integer = this.loadClass(path.join(somClassLibPath, 'Integer.som'), PrimitiveInteger)
+
+    // Convenience constructor for integer literals in generated code.
+    // TODO: Clean this up.
+    this.Integer = (str) => Integer['fromString:'](str)
+  }
+
+  get(key) {
+    return this.bindings.get(key)
+  }
+
+  set(key, val) {
+    this.bindings.set(key, val)
   }
 
   send (receiver, selector, args) {
@@ -23,21 +34,13 @@ export class ExecutionContext {
     }
   }
 
-  Integer (str) {
-    return this.classes.Integer['fromString:'](str)
-  }
-
-  Symbol (str) {
-    return Symbol.for(str)
-  }
-
   loadClass (filename, superclass = undefined) {
     const source = fs.readFileSync(filename)
     const className = path.basename(filename, '.som')
-    return this.loadClassFromSource(source, className, superclass)
+    return this._loadClassFromSource(source, className, superclass)
   }
 
-  loadClassFromSource (source, expectedClassName = undefined, superclass) {
+  _loadClassFromSource (source, expectedClassName = undefined, superclass) {
     const { className, superclassName, js } = compileClass(source, this)
     if (!!expectedClassName && expectedClassName !== className) {
       throw new Error(
@@ -47,20 +50,28 @@ export class ExecutionContext {
     if (superclassName && superclass) {
       throw new Error('bad superclass')
     }
+
+    const loadedClass = this._evalJS(js, {$superclass: superclass})
+    this.set(className, loadedClass)
+    return loadedClass
+  }
+
+  _evalJS(js, extraBindings={}) {
+    // TODO: Find a cleaner way to expose the environment, so that it's totally separate
+    // from the JS env.
+    const argNames = ['$som', ...this.bindings.keys(), ...Object.keys(extraBindings)]
+    const args = [this, ...this.bindings.values(), ...Object.values(extraBindings)]
+
     // eslint-disable-next-line no-new-func
-    return (this.classes[className] = new Function('$som', '$superclass', js)(
-      this,
-      superclass
-    ))
+    return new Function(...argNames, js)(...args)
   }
 
   eval (source, startRule = 'BlockContents') {
-    // eslint-disable-next-line no-new-func
-    return new Function('$som', compile(source, startRule))(this)
+    return this._evalJS(compile(source, startRule))
   }
 }
 
 export function doIt (source, startRule = undefined) {
-  const ctx = new ExecutionContext()
+  const ctx = new Environment()
   return ctx.eval(source, startRule)
 }
