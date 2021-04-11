@@ -38,7 +38,9 @@ semantics.addOperation('isPrimitive', {
 semantics.addOperation('toJS', {
   Classdef (id, _, superclass, instSlots, _sep, classSlotsOpt, _end) {
     const classDecl = [
-      `class ${id.toJS()} extends $som.superclass {` + instSlots.toJS() + '}'
+      `class ${id.toJS()} extends $superclass {`,
+      instSlots.toJS(),
+      '}'
     ].join('')
     if (classSlotsOpt._node.hasChildren()) {
       const statics = `${classSlotsOpt.toJS()}`
@@ -48,7 +50,8 @@ semantics.addOperation('toJS', {
     }
   },
   identifier (first, rest) {
-    return this.sourceString
+    // TODO: Find a better way to deal with `self`.
+    return this.sourceString === 'self' ? 'this' : this.sourceString
   },
   InstanceSlots (_, identIter, _end, methodIter) {
     return (
@@ -71,8 +74,8 @@ semantics.addOperation('toJS', {
       return ''
     }
     const selector = pattern.selector()
-    const params = pattern.params()
-    return `'${selector}'(${params.join(', ')}){${body.toJS()}}`
+    const paramList = pattern.params().join(', ')
+    return `'${selector}'(${paramList}){${body.toJS()}}`
   },
   MethodBlock (_open, blockContentsOpt, _close) {
     return blockContentsOpt.toJS().join('')
@@ -222,10 +225,9 @@ export function compileClass (source, env) {
     throw new Error(result.message)
   }
   // TODO: Use `env` to ensure there are no undefined references.
-  const root = semantics(result)
   return {
-    className: root.className(),
-    superclassName: root.superclassName(),
-    js: root.toJS()
+    className: semantics(result).className(),
+    superclassName: semantics(result).superclassName(),
+    js: `return ${semantics(result).toJS()}`
   }
 }

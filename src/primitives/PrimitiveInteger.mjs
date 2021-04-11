@@ -7,19 +7,19 @@ export class PrimitiveInteger {
   // ----------
 
   '+' (argument) {
-    return new PrimitiveInteger(this.val + argument.val)
+    return new this.constructor(this.val + argument.val)
   }
 
   '-' (argument) {
-    throw new Error('not implemented')
+    return new this.constructor(this.val - argument.val)
   }
 
   '*' (argument) {
-    throw new Error('not implemented')
+    return new this.constructor(this.val * argument.val)
   }
 
   '/' (argument) {
-    throw new Error('not implemented')
+    return new this.constructor(this.val / argument.val)
   }
 
   '//' (argument) {
@@ -85,6 +85,5 @@ export class PrimitiveInteger {
 }
 
 PrimitiveInteger['fromString:'] = function (aString) {
-  // TODO: This is wrong! Should create an Integer, not PrimitiveInteger.
-  return new PrimitiveInteger(parseInt(aString, 10))
+  return new this(parseInt(aString, 10))
 }

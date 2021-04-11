@@ -131,17 +131,14 @@ test('operations: superclassName', t => {
 })
 
 test('codegen: class and method definitions', t => {
-  t.is(
-    compile('Dog = (run = ())'),
-    "class Dog extends $som.superclass {'run'(){}}"
-  )
+  t.is(compile('Dog = (run = ())'), "class Dog extends $superclass {'run'(){}}")
   t.is(
     compile('Dog = (barkAt: x and: y = ())'),
-    "class Dog extends $som.superclass {'barkAt:and:'(x, y){}}"
+    "class Dog extends $superclass {'barkAt:and:'(x, y){}}"
   )
   t.is(
     compile('Dog = (>> dist = ())'),
-    "class Dog extends $som.superclass {'>>'(dist){}}"
+    "class Dog extends $superclass {'>>'(dist){}}"
   )
 })
 
