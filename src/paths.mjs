@@ -14,4 +14,6 @@ export const somClassLibPath = path.join(
   '../third_party/SOM-st/SOM/Smalltalk'
 )
 
+export const generatedClassesPath = path.join(__dirname, 'classes/generated')
+
 export const testDataPath = path.join(__dirname, '../test/data')

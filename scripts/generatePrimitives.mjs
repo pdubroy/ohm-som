@@ -7,7 +7,10 @@ semantics.addOperation('primitiveMethods', {
   Classdef (id, eq, superclass, instSlots, sep, classSlots, end) {
     return [
       ...instSlots.primitiveMethods().flat(),
-      ...classSlots.primitiveMethods().flat().map(o => ({ ...o, isStatic: true}))
+      ...classSlots
+        .primitiveMethods()
+        .flat()
+        .map(o => ({ ...o, isStatic: true }))
     ]
   },
   InstanceSlots (_, identIter, _end, methodIter) {
@@ -20,7 +23,7 @@ semantics.addOperation('primitiveMethods', {
     if (body._node.ctorName === 'primitive') {
       return {
         selector: pattern.selector(),
-        params: pattern.params(),
+        params: pattern.params()
       }
     }
     return []

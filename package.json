@@ -6,7 +6,8 @@
   "scripts": {
     "test": "ava",
     "lint": "prettier-standard --check && standard",
-    "format": "prettier-standard --format && standard --fix"
+    "format": "prettier-standard --format && standard --fix",
+    "generate-classes": "node scripts/generateClassLib.mjs"
   },
   "author": "Patrick Dubroy <pdubroy@gmail.com>",
   "license": "MIT",
@@ -14,7 +15,8 @@
     "ava": "^3.15.0",
     "prettier-standard": "^16.4.1",
     "standard": "^16.0.3",
-    "walk-sync": "^2.2.0"
+    "walk-sync": "^2.2.0",
+    "yargs": "^16.2.0"
   },
   "dependencies": {
     "ohm-js": "^15.5.0"

@@ -10,18 +10,14 @@ test('basic eval w/ PrimitiveInteger', t => {
 test('full eval with real Integer class', t => {
   const env = new Environment()
 
-  const Integer = env.get('Integer')
-  const x = Integer['fromString:']('4')
-  t.is(x.val, 4)
-  t.is(typeof x.negated, 'function')
-
   t.is(env.eval('^4 negated asString'), '-4')
   t.is(env.eval('^(3 + (1 negated - 2)) asString'), '0')
 
-  t.is(env.eval(`^(Integer fromString: '42') asString`), '42')
+  t.is(env.eval("^(Integer fromString: '42') asString"), '42')
 
   /*
   TODO:
   - Implement true/false
+      * Requires supporting non-primitive superclasses in generateClass
  */
 })

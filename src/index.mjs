@@ -1,6 +1,8 @@
 import fs from 'fs'
 import ohm from 'ohm-js'
+import path from 'path'
 
+import { assert } from './assert.mjs'
 import { somGrammarPath } from './paths.mjs'
 
 export const grammar = ohm.grammar(fs.readFileSync(somGrammarPath))
@@ -36,29 +38,37 @@ semantics.addOperation('isPrimitive', {
 })
 
 semantics.addOperation('toJS', {
+  // Returns a JavaScript *expression* for a Smalltalk class definition.
   Classdef (id, _, superclass, instSlots, _sep, classSlotsOpt, _end) {
+    const className = id.toJS()
     const classDecl = [
-      `class ${id.toJS()} extends $superclass {`,
+      `class ${className} extends $superclass {`,
       instSlots.toJS(),
       '}'
     ].join('')
     if (classSlotsOpt._node.hasChildren()) {
       const statics = `${classSlotsOpt.toJS()}`
-      return `Object.assign(${classDecl},${statics})`
+      return `Object.assign(${classDecl},${statics});`
     } else {
       return classDecl
     }
   },
   identifier (first, rest) {
-    // TODO: Find a better way to deal with `self`.
-    return this.sourceString === 'self' ? 'this' : this.sourceString
+    // TODO: Find a better way to deal with this stuff.
+    const { sourceString } = this
+    return sourceString === 'self'
+      ? 'this'
+      : sourceString === 'new'
+        ? 'new_'
+        : sourceString === 'class'
+          ? 'class_'
+          : sourceString
   },
-  InstanceSlots (_, identIter, _end, methodIter) {
+  InstanceSlots (_, identOpt, _end, methodIter) {
+    const identifiers = identOpt.toJS()[0] || []
     return (
-      identIter
-        .toJS()
-        .map(name => `${name};`)
-        .join('\n') + methodIter.toJS().join('\n')
+      identifiers.map(id => `${id}=undefined;`).join('\n') +
+      methodIter.toJS().join('\n')
     )
   },
   ClassSlots (_, identOpt, _end, methodIter) {
@@ -228,6 +238,33 @@ export function compileClass (source, env) {
   return {
     className: semantics(result).className(),
     superclassName: semantics(result).superclassName(),
-    js: `return ${semantics(result).toJS()}`
+    js: `${semantics(result).toJS()}`
   }
+}
+
+export function generateClass (source, expectedClassName, prettier = s => s) {
+  const { className, superclassName, js } = compileClass(source)
+  assert(
+    expectedClassName === className,
+    `class name: expected ${expectedClassName}, got ${className}`
+  )
+  if (superclassName) {
+    console.log(`- skipping ${className}`)
+  }
+
+  const jsSuperclassName = `Primitive${className}`
+  const output = [
+    `import {${jsSuperclassName}} from '../primitive/${jsSuperclassName}.mjs'`,
+    `export function ${className}($som){`,
+    `const $superclass = ${jsSuperclassName}`, // TODO: Pass $som here too?
+    `return ${js}`,
+    '}'
+  ].join('\n')
+  return { className, generatedCode: prettier(output) }
+}
+
+export function generateClassFromFile (filename, prettier = s => s) {
+  const source = fs.readFileSync(filename)
+  const expectedClassName = path.basename(filename, '.som')
+  return generateClass(source, expectedClassName, prettier)
 }

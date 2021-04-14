@@ -2,25 +2,21 @@ import fs from 'fs'
 import path from 'path'
 
 import { compileClass, compile } from './index.mjs'
-import { somClassLibPath } from './paths.mjs'
-import { PrimitiveInteger } from './primitives/PrimitiveInteger.mjs'
+import { Integer } from './classes/generated/Integer.mjs'
 
 export class Environment {
   constructor () {
-    this.bindings = new Map()
-
-    const Integer = this.loadClass(path.join(somClassLibPath, 'Integer.som'), PrimitiveInteger)
+    this.bindings = new Map([['Integer', Integer(this)]])
 
     // Convenience constructor for integer literals in generated code.
-    // TODO: Clean this up.
-    this.Integer = (str) => Integer['fromString:'](str)
+    this.Integer = str => this.get('Integer')['fromString:'](str)
   }
 
-  get(key) {
+  get (key) {
     return this.bindings.get(key)
   }
 
-  set(key, val) {
+  set (key, val) {
     this.bindings.set(key, val)
   }
 
@@ -51,16 +47,24 @@ export class Environment {
       throw new Error('bad superclass')
     }
 
-    const loadedClass = this._evalJS(js, {$superclass: superclass})
+    const loadedClass = this._evalJS(js, { $superclass: superclass })
     this.set(className, loadedClass)
     return loadedClass
   }
 
-  _evalJS(js, extraBindings={}) {
+  _evalJS (js, extraBindings = {}) {
     // TODO: Find a cleaner way to expose the environment, so that it's totally separate
     // from the JS env.
-    const argNames = ['$som', ...this.bindings.keys(), ...Object.keys(extraBindings)]
-    const args = [this, ...this.bindings.values(), ...Object.values(extraBindings)]
+    const argNames = [
+      '$som',
+      ...this.bindings.keys(),
+      ...Object.keys(extraBindings)
+    ]
+    const args = [
+      this,
+      ...this.bindings.values(),
+      ...Object.values(extraBindings)
+    ]
 
     // eslint-disable-next-line no-new-func
     return new Function(...argNames, js)(...args)
