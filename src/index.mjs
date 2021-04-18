@@ -117,6 +117,9 @@ semantics.addOperation('identifiers()', {
 semantics.addOperation('toJS()', {
   // Returns a JavaScript *expression* for a Smalltalk class definition.
   Classdef (id, _, superclass, instSlots, _sep, classSlotsOpt, _end) {
+    // Calculate the `lexicalVars` attribute on all nodes.
+    this.lexicalVars // eslint-disable-line no-unused-expressions
+
     const className = id.toJS()
     const classDecl = [
       `class ${className} extends $superclass {`,
@@ -129,9 +132,6 @@ semantics.addOperation('toJS()', {
     } else {
       return classDecl
     }
-  },
-  variable (child) {
-    return child.toJS()
   },
   identifier (first, rest) {
     const id = this.sourceString
@@ -153,6 +153,9 @@ semantics.addOperation('toJS()', {
     return '{' + [...props, ...methods].join(',') + '}'
   },
   Method (pattern, _eq, body) {
+    // Calculate the `lexicalVars` attribute on all nodes.
+    this.lexicalVars // eslint-disable-line no-unused-expressions
+
     if (body.isPrimitive()) {
       return ''
     }
@@ -180,15 +183,15 @@ semantics.addOperation('toJS()', {
   },
   KeywordExpression_rec (exp, message) {
     const { selector, args } = message.selectorAndArgsToJS()
-    return `$som.send(${exp.toJS()},${selector},${args})`
+    return `this.$send(${exp.toJS()},${selector},${args})`
   },
   BinaryExpression_rec (exp, message) {
     const { selector, args } = message.selectorAndArgsToJS()
-    return `$som.send(${exp.toJS()},${selector},${args})`
+    return `this.$send(${exp.toJS()},${selector},${args})`
   },
   UnaryExpression_rec (exp, message) {
     const { selector, args } = message.selectorAndArgsToJS()
-    return `$som.send(${exp.toJS()},${selector},${args})`
+    return `this.$send(${exp.toJS()},${selector},${args})`
   },
   Result (exp, _) {
     return exp.toJS()
@@ -212,7 +215,7 @@ semantics.addOperation('toJS()', {
     return `${this.sourceString}`
   },
   LiteralNumber_int (_, integer) {
-    return `$som.Integer(${this.sourceString})`
+    return `this.$int(${this.sourceString})`
   },
   LiteralSymbol (_, stringOrSelector) {
     return `Symbol.for(${stringOrSelector.asString()})`
@@ -220,14 +223,27 @@ semantics.addOperation('toJS()', {
   LiteralString (str) {
     return `${str.asString()}`
   },
-  pseudoVariable (variable) {
-    const { ctorName } = variable._node
-    return ['nil', 'true', 'false', 'super'].includes(ctorName)
-      ? `this.$${ctorName}`
-      : variable.toJS()
+  variable (pseudoVarOrIdent) {
+    if (pseudoVarOrIdent._node.ctorName === 'identifier') {
+      const id = pseudoVarOrIdent.toJS()
+      return id in this.lexicalVars ? id : `this.$vars.${id}`
+    }
+    return pseudoVarOrIdent.toJS()
   },
   self (_) {
     return 'this'
+  },
+  super (_) {
+    return 'super'
+  },
+  nil (_) {
+    return 'this.$vars.nil'
+  },
+  true (_) {
+    return 'this.$vars.true'
+  },
+  false (_) {
+    return 'this.$vars.false'
   }
 })
 
@@ -330,19 +346,23 @@ export function generateClass (source, expectedClassName, prettier = s => s) {
     expectedClassName === className,
     `class name: expected ${expectedClassName}, got ${className}`
   )
-  if (superclassName) {
-    console.log(`- skipping ${className}`)
-  }
-
-  const jsSuperclassName = `Primitive${className}`
   const output = [
-    `import {${jsSuperclassName}} from '../primitive/${jsSuperclassName}.mjs'`,
-    `export function ${className}($som){`,
-    `const $superclass = ${jsSuperclassName}`, // TODO: Pass $som here too?
+    `export default function ${className}(globals){`,
+    generateSuperclassDecl(className, superclassName),
     `return ${js}`,
     '}'
   ].join('\n')
   return { className, generatedCode: prettier(output) }
+}
+
+function generateSuperclassDecl (className, superclassName) {
+  let actualSuperclassname = superclassName || `Primitive${className}`
+  /* In the SOM definition, Object claims to inherit from `nil`, but we want
+     it to inherit from PrimitiveObject. */
+  if (superclassName === 'nil') {
+    actualSuperclassname = 'PrimitiveObject'
+  }
+  return `const $superclass = globals.${actualSuperclassname}`
 }
 
 export function generateClassFromFile (filename, prettier = s => s) {

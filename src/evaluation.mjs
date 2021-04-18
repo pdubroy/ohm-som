@@ -2,31 +2,45 @@ import fs from 'fs'
 import path from 'path'
 
 import { compileClass, compile } from './index.mjs'
-import { Integer } from './classes/generated/Integer.mjs'
+import initObject from './classes/generated/Object.mjs'
+import initInteger from './classes/generated/Integer.mjs'
+import initPrimitiveInteger from './classes/primitive/PrimitiveInteger.mjs'
+import initPrimitiveObject from './classes/primitive/PrimitiveObject.mjs'
 
 export class Environment {
   constructor () {
-    this.bindings = new Map([['Integer', Integer(this)]])
+    const g = (this.globals = Object.create(null))
+    g.PrimitiveObject = initPrimitiveObject(g)
+    g.Object = initObject(g)
+    g.PrimitiveInteger = initPrimitiveInteger(g)
+    g.Integer = initInteger(g)
 
-    // Convenience constructor for integer literals in generated code.
-    this.Integer = str => this.get('Integer')['fromString:'](str)
+    Object.assign(g.PrimitiveObject.prototype, {
+      // Convenience constructor for integer literals in generated code.
+      $int: str => g.Integer['fromString:'](str),
+      $send: this.send
+    })
   }
 
   get (key) {
-    return this.bindings.get(key)
+    return this.globals[key]
   }
 
   set (key, val) {
-    this.bindings.set(key, val)
+    this.globals[key] = val
   }
 
+  // TODO: Could we actually implement message sends as regular JS method calls,
+  // with a Proxy object in the prototype chain? That would be cool!
   send (receiver, selector, args) {
     const method = receiver[selector]
     if (method) {
       return method.call(receiver, ...args)
     } else {
       // TODO: Implement doesNotUnderstand:arguments:
-      throw new Error(`doesNotUnderstand: #${selector} args: [${args}]`)
+      throw new Error(
+        `${receiver} doesNotUnderstand: #${selector} args: [${args}]`
+      )
     }
   }
 
@@ -53,21 +67,9 @@ export class Environment {
   }
 
   _evalJS (js, extraBindings = {}) {
-    // TODO: Find a cleaner way to expose the environment, so that it's totally separate
-    // from the JS env.
-    const argNames = [
-      '$som',
-      ...this.bindings.keys(),
-      ...Object.keys(extraBindings)
-    ]
-    const args = [
-      this,
-      ...this.bindings.values(),
-      ...Object.values(extraBindings)
-    ]
-
+    const self = new this.globals.Object()
     // eslint-disable-next-line no-new-func
-    return new Function(...argNames, js)(...args)
+    return new Function(js).call(self)
   }
 
   eval (source, startRule = 'BlockContents') {

@@ -143,12 +143,12 @@ test('codegen: class and method definitions', t => {
 })
 
 test('codegen: method bodies', t => {
-  t.is(compile('doIt = (^3)', 'Method'), "'doIt'(){return $som.Integer(3)}")
+  t.is(compile('doIt = (^3)', 'Method'), "'doIt'(){return this.$int(3)}")
   t.is(compile('do: x = (^x)', 'Method'), "'do:'(x){return x}")
   t.is(compile('doIt = (| a b | ^a)', 'Method'), "'doIt'(){let a,b;return a}")
   t.is(
     compile('doIt = (| x | x := 3. ^x)', 'Method'),
-    "'doIt'(){let x;x=$som.Integer(3);return x}"
+    "'doIt'(){let x;x=this.$int(3);return x}"
   )
 })
 
@@ -156,15 +156,15 @@ test('codegen: message sends', t => {
   //  '4 between: 1 + 1 and: 64 sqrt', 'BlockBody'),
   t.is(
     compile('4 between: 2 and: 3', 'BlockBody'),
-    "$som.send($som.Integer(4),'between:and:',[$som.Integer(2),$som.Integer(3)])"
+    "this.$send(this.$int(4),'between:and:',[this.$int(2),this.$int(3)])"
   )
   t.is(
     compile('4 + 1 between: 2 and: 3', 'BlockBody'),
-    "$som.send($som.send($som.Integer(4),'+',[$som.Integer(1)]),'between:and:',[$som.Integer(2),$som.Integer(3)])"
+    "this.$send(this.$send(this.$int(4),'+',[this.$int(1)]),'between:and:',[this.$int(2),this.$int(3)])"
   )
   t.is(
     compile('16 sqrt + 1 between: 2 negated and: 8 + 1 ', 'BlockBody'),
-    "$som.send($som.send($som.send($som.Integer(16),'sqrt',[]),'+',[$som.Integer(1)]),'between:and:',[$som.send($som.Integer(2),'negated',[]),$som.send($som.Integer(8),'+',[$som.Integer(1)])])"
+    "this.$send(this.$send(this.$send(this.$int(16),'sqrt',[]),'+',[this.$int(1)]),'between:and:',[this.$send(this.$int(2),'negated',[]),this.$send(this.$int(8),'+',[this.$int(1)])])"
   )
 })
 
@@ -174,10 +174,10 @@ test('codegen: literals', t => {
 
   t.is(compile("''", 'Expression'), "''")
 
-  t.is(compile('4', 'Expression'), '$som.Integer(4)')
+  t.is(compile('4', 'Expression'), 'this.$int(4)')
   t.is(compile('-3.14', 'Expression'), '-3.14')
 
-  t.is(compile("#(4 'hey')", 'Expression'), "[$som.Integer(4),'hey']")
+  t.is(compile("#(4 'hey')", 'Expression'), "[this.$int(4),'hey']")
 })
 
 test('codegen: blocks', t => {
@@ -190,10 +190,14 @@ test('codegen: blocks', t => {
 })
 
 test('codegen: other expressions', t => {
-  t.is(compile('x:=y := 3.0', 'Expression'), 'x=y=3.0', 'assignment')
+  t.is(
+    compile('x:=y := 3.0', 'Expression'),
+    'this.$vars.x=this.$vars.y=3.0',
+    'assignment'
+  )
   t.is(
     compile('x:=(3.0) + ((4.0))', 'Expression'),
-    "x=$som.send(3.0,'+',[4.0])",
+    "this.$vars.x=this.$send(3.0,'+',[4.0])",
     'nested terms'
   )
 })

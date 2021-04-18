@@ -10,9 +10,9 @@ SOM {
 
     Superclass = identifier? newTerm
 
-    InstanceSlots = (or variable* or)? Method*
+    InstanceSlots = (or identifier* or)? Method*
 
-    ClassSlots = (or variable* or)? Method*
+    ClassSlots = (or identifier* or)? Method*
 
     Method = Pattern equal (primitive | MethodBlock)
 
@@ -28,7 +28,7 @@ SOM {
 
     BlockContents = (or LocalDefs or)? BlockBody
 
-    LocalDefs = variable*
+    LocalDefs = identifier*
 
     BlockBody =
       | exit Result  -- return
