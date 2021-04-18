@@ -10,9 +10,9 @@ SOM {
 
     Superclass = identifier? newTerm
 
-    InstanceSlots = (or identifier* or)? Method*
+    InstanceSlots = (or variable* or)? Method*
 
-    ClassSlots = (or identifier* or)? Method*
+    ClassSlots = (or variable* or)? Method*
 
     Method = Pattern equal (primitive | MethodBlock)
 
@@ -28,7 +28,7 @@ SOM {
 
     BlockContents = (or LocalDefs or)? BlockBody
 
-    LocalDefs = identifier*
+    LocalDefs = variable*
 
     BlockBody =
       | exit Result  -- return
@@ -37,7 +37,7 @@ SOM {
     Result = Expression period?
 
     Expression =
-      | identifier assign Expression  -- assignment
+      | variable assign Expression  -- assignment
       | KeywordExpression
 
     KeywordExpression =
@@ -58,7 +58,7 @@ SOM {
 
     UnaryMessage = unarySelector
 
-    Primary = identifier | NestedTerm | NestedBlock | Literal
+    Primary = variable | NestedTerm | NestedBlock | Literal
 
     NestedTerm = newTerm Expression endTerm
 
@@ -93,10 +93,19 @@ SOM {
     quote = "\""
     space += comment
 
-    identifier = letter idRest*
+    variable = pseudoVariable | identifier
+
+    identifier (an identifier) = letter idRest*
     idRest = letter | digit | "_"
 
+    pseudoVariable = nil | true | false | self | super
+
     primitive = "primitive" ~idRest
+    nil = "nil" ~idRest
+    true = "true" ~idRest
+    false = "false" ~idRest
+    self = "self" ~idRest
+    super = "super" ~idRest
 
     equal = "="
 

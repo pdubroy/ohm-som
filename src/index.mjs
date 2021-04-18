@@ -5,6 +5,23 @@ import path from 'path'
 import { assert } from './assert.mjs'
 import { somGrammarPath } from './paths.mjs'
 
+// From https://262.ecma-international.org/11.0/#sec-keywords-and-reserved-words
+// prettier-ignore
+const jsReservedWords = [
+  // Reserved words:
+  'await', 'break', 'case', 'catch', 'class', 'const', 'continue', 'debugger',
+  'default', 'delete', 'do', 'else', 'enum', 'export', 'extends', 'false',
+  'finally', 'for', 'function', 'if', 'import', 'in', 'instance', 'of', 'new',
+  'null', 'return', 'super', 'switch', 'this', 'throw', 'true', 'try',
+  'typeof', 'var', 'void', 'while', 'with', 'yield',
+
+  // Contextually disallowed as identifiers, in strict mode code:
+  'let', 'static', 'implements', 'interface', 'package', 'private', 'protected', 'public',
+
+  // Not keywords, but subject to some restrictions in strict mode code:
+  'arguments', 'eval'
+]
+
 export const grammar = ohm.grammar(fs.readFileSync(somGrammarPath))
 
 export const semantics = grammar.createSemantics()
@@ -37,7 +54,67 @@ semantics.addOperation('isPrimitive', {
   }
 })
 
-semantics.addOperation('toJS', {
+semantics.addAttribute(
+  'lexicalVars',
+  (() => {
+    const envStack = [Object.create(null)]
+
+    const withEnv = (ids, fn) => {
+      const env = Object.create(envStack[envStack.length - 1])
+      ids.forEach(id => {
+        env[id] = id
+      })
+      envStack.push(env)
+      fn()
+      return envStack.pop()
+    }
+
+    return {
+      Method (pattern, _eq, body) {
+        return withEnv(pattern.identifiers(), () => {
+          body.lexicalVars // eslint-disable-line no-unused-expressions
+        })
+      },
+      BlockContents (_, localDefsOpt, _1, blockBody) {
+        const localDefs = localDefsOpt.child(0)
+        const ids = localDefs ? localDefs.identifiers() : []
+        return withEnv(ids, () => {
+          blockBody.lexicalVars // eslint-disable-line no-unused-expressions
+        })
+      },
+      _nonterminal (children) {
+        children.forEach(c => c.lexicalVars)
+        return envStack[envStack.length - 1]
+      },
+      _terminal () {
+        return envStack[envStack.length - 1]
+      }
+    }
+  })()
+)
+
+semantics.addOperation('identifiers()', {
+  UnaryPattern (selector) {
+    return []
+  },
+  BinaryPattern (selector, ident) {
+    return ident.identifiers()
+  },
+  KeywordPattern (keywordIter, identIter) {
+    return identIter.identifiers()
+  },
+  _nonterminal (children) {
+    return children.flatMap(c => c.identifiers())
+  },
+  _iter (children) {
+    return children.flatMap(c => c.identifiers())
+  },
+  identifier (first, rest) {
+    return [this.sourceString]
+  }
+})
+
+semantics.addOperation('toJS()', {
   // Returns a JavaScript *expression* for a Smalltalk class definition.
   Classdef (id, _, superclass, instSlots, _sep, classSlotsOpt, _end) {
     const className = id.toJS()
@@ -53,16 +130,12 @@ semantics.addOperation('toJS', {
       return classDecl
     }
   },
+  variable (child) {
+    return child.toJS()
+  },
   identifier (first, rest) {
-    // TODO: Find a better way to deal with this stuff.
-    const { sourceString } = this
-    return sourceString === 'self'
-      ? 'this'
-      : sourceString === 'new'
-        ? 'new_'
-        : sourceString === 'class'
-          ? 'class_'
-          : sourceString
+    const id = this.sourceString
+    return jsReservedWords.includes(id) ? `_${id}` : id
   },
   InstanceSlots (_, identOpt, _end, methodIter) {
     const identifiers = identOpt.toJS()[0] || []
@@ -146,6 +219,15 @@ semantics.addOperation('toJS', {
   },
   LiteralString (str) {
     return `${str.asString()}`
+  },
+  pseudoVariable (variable) {
+    const { ctorName } = variable._node
+    return ['nil', 'true', 'false', 'super'].includes(ctorName)
+      ? `this.$${ctorName}`
+      : variable.toJS()
+  },
+  self (_) {
+    return 'this'
   }
 })
 
