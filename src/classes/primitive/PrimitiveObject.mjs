@@ -1,7 +1,7 @@
-export default function (globals) {
-  return class PrimitiveObject {
+export default function () {
+  return class PrimitiveObject extends null {
     constructor () {
-      this.$vars = Object.create(this.$vars || globals)
+      return Object.create(new.target.prototype)
     }
 
     class () {

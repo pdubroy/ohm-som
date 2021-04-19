@@ -9,17 +9,16 @@ import initPrimitiveObject from './classes/primitive/PrimitiveObject.mjs'
 
 export class Environment {
   constructor () {
-    const g = (this.globals = Object.create(null))
-    g.PrimitiveObject = initPrimitiveObject(g)
-    g.Object = initObject(g)
-    g.PrimitiveInteger = initPrimitiveInteger(g)
-    g.Integer = initInteger(g)
+    const PrimitiveObject = initPrimitiveObject()
+    const g = (this.globals = PrimitiveObject.prototype)
+    g.$PrimitiveObject = PrimitiveObject
+    g.$Object = initObject(g)
+    g.$PrimitiveInteger = initPrimitiveInteger(g)
+    g.$Integer = initInteger(g)
 
-    Object.assign(g.PrimitiveObject.prototype, {
-      // Convenience constructor for integer literals in generated code.
-      $int: str => g.Integer['fromString:'](str),
-      $send: this.send
-    })
+    // Convenience constructor for integer literals in generated code.
+    g.$int = str => g.$Integer['fromString:'](str)
+    g.$send = this.send
   }
 
   get (key) {
@@ -67,7 +66,7 @@ export class Environment {
   }
 
   _evalJS (js, extraBindings = {}) {
-    const self = new this.globals.Object()
+    const self = new this.globals.$Object()
     // eslint-disable-next-line no-new-func
     return new Function(js).call(self)
   }

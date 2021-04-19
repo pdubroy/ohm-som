@@ -226,7 +226,7 @@ semantics.addOperation('toJS()', {
   variable (pseudoVarOrIdent) {
     if (pseudoVarOrIdent._node.ctorName === 'identifier') {
       const id = pseudoVarOrIdent.toJS()
-      return id in this.lexicalVars ? id : `this.$vars.${id}`
+      return id in this.lexicalVars ? id : `this.$${id}`
     }
     return pseudoVarOrIdent.toJS()
   },
@@ -237,13 +237,13 @@ semantics.addOperation('toJS()', {
     return 'super'
   },
   nil (_) {
-    return 'this.$vars.nil'
+    return 'this.$nil'
   },
   true (_) {
-    return 'this.$vars.true'
+    return 'this.$true'
   },
   false (_) {
-    return 'this.$vars.false'
+    return 'this.$false'
   }
 })
 
@@ -362,7 +362,7 @@ function generateSuperclassDecl (className, superclassName) {
   if (superclassName === 'nil') {
     actualSuperclassname = 'PrimitiveObject'
   }
-  return `const $superclass = globals.${actualSuperclassname}`
+  return `const $superclass = globals.$${actualSuperclassname}`
 }
 
 export function generateClassFromFile (filename, prettier = s => s) {

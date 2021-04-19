@@ -2,6 +2,14 @@ import test from 'ava'
 
 import { doIt, Environment } from './evaluation.mjs'
 
+test('prototype chain', t => {
+  const env = new Environment()
+  const PrimitiveObject = env.get('$PrimitiveObject')
+  const o = new PrimitiveObject()
+  t.is(typeof o.$int, 'function')
+  t.is(o.$PrimitiveObject, PrimitiveObject)
+})
+
 test('basic eval w/ PrimitiveInteger', t => {
   t.is(doIt('^(3 + 4) asString', 'BlockContents'), '7')
   t.is(doIt('| x y | x := 3. y := 4. ^(x + y) asString', 'BlockContents'), '7')

@@ -192,12 +192,12 @@ test('codegen: blocks', t => {
 test('codegen: other expressions', t => {
   t.is(
     compile('x:=y := 3.0', 'Expression'),
-    'this.$vars.x=this.$vars.y=3.0',
+    'this.$x=this.$y=3.0',
     'assignment'
   )
   t.is(
     compile('x:=(3.0) + ((4.0))', 'Expression'),
-    "this.$vars.x=this.$send(3.0,'+',[4.0])",
+    "this.$x=this.$send(3.0,'+',[4.0])",
     'nested terms'
   )
 })

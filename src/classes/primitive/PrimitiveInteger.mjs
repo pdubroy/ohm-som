@@ -1,5 +1,5 @@
 export default function (globals) {
-  class PrimitiveInteger extends globals.Object {
+  class PrimitiveInteger extends globals.$Object {
     constructor (val) {
       super()
       this.val = val
