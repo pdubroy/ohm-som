@@ -24,10 +24,13 @@ test('full eval with real Integer class', t => {
   t.is(env.eval("^(Integer fromString: '42') asString"), '42')
 })
 
-test.failing('evaluation with boolean classes', t => {
+test('evaluation with boolean classes', t => {
   const env = new Environment()
   t.is(env.eval('^true asString'), 'true')
-  t.is(env.eval('^true or: []'), 'true') // Fails b/c _true is not defined in the generated class.
+  t.is(env.eval('^(true or: []) asString'), 'true')
+
+  t.is(env.eval('^false asString'), 'false')
+  t.is(env.eval('^(false and: []) asString'), 'false')
 })
 
 /*

@@ -2,8 +2,12 @@ import fs from 'fs'
 import path from 'path'
 
 import { compileClass, compile } from './index.mjs'
-import initObject from './classes/generated/Object.mjs'
+import initBoolean from './classes/generated/Boolean.mjs'
+import initFalse from './classes/generated/False.mjs'
 import initInteger from './classes/generated/Integer.mjs'
+import initTrue from './classes/generated/True.mjs'
+import initObject from './classes/generated/Object.mjs'
+import initPrimitiveBoolean from './classes/primitive/PrimitiveBoolean.mjs'
 import initPrimitiveInteger from './classes/primitive/PrimitiveInteger.mjs'
 import initPrimitiveObject from './classes/primitive/PrimitiveObject.mjs'
 
@@ -15,9 +19,17 @@ export class Environment {
     g.$Object = initObject(g)
     g.$PrimitiveInteger = initPrimitiveInteger(g)
     g.$Integer = initInteger(g)
+    g.$PrimitiveBoolean = initPrimitiveBoolean(g)
+    g.$Boolean = initBoolean(g)
+    const True = (g.$True = initTrue(g))
+    const False = (g.$False = initFalse(g))
+
+    g.$true = new True()
+    g.$false = new False()
 
     // Convenience constructor for integer literals in generated code.
     g.$int = str => g.$Integer['fromString:'](str)
+
     g.$send = this.send
   }
 
