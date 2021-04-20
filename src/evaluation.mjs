@@ -1,15 +1,18 @@
 import fs from 'fs'
 import path from 'path'
 
-import { compileClass, compile } from './index.mjs'
+import initBlock from './classes/generated/Block.mjs'
 import initBoolean from './classes/generated/Boolean.mjs'
 import initFalse from './classes/generated/False.mjs'
 import initInteger from './classes/generated/Integer.mjs'
 import initTrue from './classes/generated/True.mjs'
 import initObject from './classes/generated/Object.mjs'
+import initPrimitiveBlock from './classes/primitive/PrimitiveBlock.mjs'
 import initPrimitiveBoolean from './classes/primitive/PrimitiveBoolean.mjs'
 import initPrimitiveInteger from './classes/primitive/PrimitiveInteger.mjs'
 import initPrimitiveObject from './classes/primitive/PrimitiveObject.mjs'
+import { compileClass, generateClass } from './index.mjs'
+import { ReturnValue } from './ReturnValue.mjs'
 
 export class Environment {
   constructor () {
@@ -21,14 +24,17 @@ export class Environment {
     g.$Integer = initInteger(g)
     g.$PrimitiveBoolean = initPrimitiveBoolean(g)
     g.$Boolean = initBoolean(g)
-    const True = (g.$True = initTrue(g))
-    const False = (g.$False = initFalse(g))
+    g.$PrimitiveBlock = initPrimitiveBlock(g)
+    g.$Block = initBlock(g)
+    g.$True = initTrue(g)
+    g.$False = initFalse(g)
 
-    g.$true = new True()
-    g.$false = new False()
+    g.$true = new g.$True()
+    g.$false = new g.$False()
 
-    // Convenience constructor for integer literals in generated code.
+    // Convenience constructors.
     g.$int = str => g.$Integer['fromString:'](str)
+    g.$block = fn => new g.$Block(fn)
 
     g.$send = this.send
   }
@@ -80,15 +86,28 @@ export class Environment {
   _evalJS (js, extraBindings = {}) {
     const self = new this.globals.$Object()
     // eslint-disable-next-line no-new-func
-    return new Function(js).call(self)
+    return new Function('globals', js).call(self, this.globals)
   }
 
-  eval (source, startRule = 'BlockContents') {
-    return this._evalJS(compile(source, startRule))
+  eval (source, startRule = undefined) {
+    if (startRule) throw new Error('no allowed!')
+    const classDef = `Main = (run = (${source}))`
+    let { output } = generateClass(classDef)
+
+    // Hack to deal with improper superclassing!
+    output = output.replace('$PrimitiveMain', '$Object')
+
+    const Main = this._evalJS(output)
+    return new Main().run()
   }
 }
 
 export function doIt (source, startRule = undefined) {
   const ctx = new Environment()
-  return ctx.eval(source, startRule)
+  try {
+    return ctx.eval(source, startRule)
+  } catch (e) {
+    if (e instanceof ReturnValue) return e.v
+    throw e
+  }
 }

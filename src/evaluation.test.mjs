@@ -11,30 +11,35 @@ test('prototype chain', t => {
 })
 
 test('basic eval w/ PrimitiveInteger', t => {
-  t.is(doIt('^(3 + 4) asString', 'BlockContents'), '7')
-  t.is(doIt('| x y | x := 3. y := 4. ^(x + y) asString', 'BlockContents'), '7')
+  t.is(doIt('(3 + 4) asString'), '7')
+  t.is(doIt('| x y | x := 3. y := 4. ^(x + y) asString'), '7')
 })
 
 test('full eval with real Integer class', t => {
-  const env = new Environment()
+  t.is(doIt('4 negated asString'), '-4')
+  t.is(doIt('(3 + (1 negated - 2)) asString'), '0')
 
-  t.is(env.eval('^4 negated asString'), '-4')
-  t.is(env.eval('^(3 + (1 negated - 2)) asString'), '0')
-
-  t.is(env.eval("^(Integer fromString: '42') asString"), '42')
+  t.is(doIt("(Integer fromString: '42') asString"), '42')
 })
 
 test('evaluation with boolean classes', t => {
-  const env = new Environment()
-  t.is(env.eval('^true asString'), 'true')
-  t.is(env.eval('^(true or: []) asString'), 'true')
+  t.is(doIt('true asString'), 'true')
+  t.is(doIt('(true or: []) asString'), 'true')
 
-  t.is(env.eval('^false asString'), 'false')
-  t.is(env.eval('^(false and: []) asString'), 'false')
+  t.is(doIt('false asString'), 'false')
+  t.is(doIt('(false and: []) asString'), 'false')
 })
 
-/*
-  TODO:
-  - Implement true/false
-      * Requires supporting non-primitive superclasses in generateClass
- */
+test('block value', t => {
+  const env = new Environment()
+  const { $true } = env.globals
+  t.is(env.eval('[true] value'), $true)
+  t.is(env.eval('[[true] value] value'), $true)
+  t.is(env.eval('[|x| x := 3. x + 1] value asString'), '4')
+})
+
+test('non-local returns', t => {
+  t.is(doIt("[^'a'] value. 'b'"), 'a')
+  t.is(doIt("[[^'a'] value. 'b'] value. 'c'"), 'a')
+  t.is(doIt("true ifTrue: ['a'] ifFalse: ['b']"), 'a')
+})

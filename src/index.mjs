@@ -164,7 +164,8 @@ semantics.addOperation('toJS()', {
     return `'${selector}'(${paramList}){${body.toJS()}}`
   },
   MethodBlock (_open, blockContentsOpt, _close) {
-    return blockContentsOpt.toJS().join('')
+    const body = blockContentsOpt.toJS().join('')
+    return `const _rv={};try{${body}}catch(e){if(e===_rv)return e.v;throw e}`
   },
   BlockContents (_or, localDefsOpt, _, blockBody) {
     return localDefsOpt.toJS().join('') + blockBody.toJS()
@@ -173,10 +174,15 @@ semantics.addOperation('toJS()', {
     return `let ${identifiers.toJS().join(',')};`
   },
   BlockBody_return (_, result) {
-    return `return ${result.toJS()}`
+    return `_rv.v=${result.toJS()};throw _rv`
   },
-  BlockBody_rec (exp, _, blockBodyIter) {
-    return [exp.toJS(), ...blockBodyIter.toJS()].join(';')
+  BlockBody_rec (exp, _, blockBodyOptOpt) {
+    const head = exp.toJS()
+    const tail = blockBodyOptOpt.toJS()[0]
+    if (tail === undefined) {
+      return `return ${head}`
+    }
+    return `${head};${tail}`
   },
   Expression_assignment (ident, _, exp) {
     return `${ident.toJS()}=${exp.toJS()}`
@@ -200,7 +206,7 @@ semantics.addOperation('toJS()', {
     return exp.toJS()
   },
   NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
-    return `(${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}}`
+    return `this.$block((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
   },
   BlockPattern (blockArguments, _) {
     return blockArguments.toJS()
@@ -340,19 +346,18 @@ export function compileClass (source, env) {
   }
 }
 
-export function generateClass (source, expectedClassName, prettier = s => s) {
+export function generateClass (source, prettyFn = s => s) {
   const { className, superclassName, js } = compileClass(source)
-  assert(
-    expectedClassName === className,
-    `class name: expected ${expectedClassName}, got ${className}`
-  )
-  const output = [
-    `export default function ${className}(globals){`,
-    generateSuperclassDecl(className, superclassName),
-    `return ${js}`,
-    '}'
-  ].join('\n')
-  return { className, generatedCode: prettier(output) }
+  const superclassDecl = generateSuperclassDecl(className, superclassName)
+  const output = `${superclassDecl};\nreturn ${js}`
+  return {
+    className,
+    output: prettyFn(output)
+  }
+}
+
+function generateClassExport (generatedCode) {
+  return `export default function (globals) {\n${generatedCode}\n}`
 }
 
 function generateSuperclassDecl (className, superclassName) {
@@ -365,8 +370,13 @@ function generateSuperclassDecl (className, superclassName) {
   return `const $superclass = globals.$${actualSuperclassname}`
 }
 
-export function generateClassFromFile (filename, prettier = s => s) {
+export function generateClassFromFile (filename, prettyFn = s => s) {
   const source = fs.readFileSync(filename)
   const expectedClassName = path.basename(filename, '.som')
-  return generateClass(source, expectedClassName, prettier)
+  const { className, output } = generateClass(source, prettyFn)
+  assert(
+    expectedClassName === className,
+    `class name: expected ${expectedClassName}, got ${className}`
+  )
+  return { className, output: generateClassExport(output) }
 }

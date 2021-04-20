@@ -16,10 +16,10 @@ const { argv } = yargs(process.argv.slice(2)).options({
 })
 
 for (const filename of walkSync(somClassLibPath, { globs: ['*.som'] })) {
-  const { className, generatedCode } = generateClassFromFile(
+  const { className, output } = generateClassFromFile(
     path.join(somClassLibPath, filename),
     argv.pretty ? prettier.format : undefined
   )
   const outputPath = path.join(generatedClassesPath, `${className}.mjs`)
-  fs.writeFileSync(outputPath, generatedCode)
+  fs.writeFileSync(outputPath, output)
 }

@@ -131,41 +131,23 @@ test('operations: superclassName', t => {
 })
 
 test('codegen: class and method definitions', t => {
-  t.is(compile('Dog = (run = ())'), "class Dog extends $superclass {'run'(){}}")
-  t.is(
-    compile('Dog = (barkAt: x and: y = ())'),
-    "class Dog extends $superclass {'barkAt:and:'(x, y){}}"
-  )
-  t.is(
-    compile('Dog = (>> dist = ())'),
-    "class Dog extends $superclass {'>>'(dist){}}"
-  )
+  t.snapshot(compile('Dog = (run = ())'))
+  t.snapshot(compile('Dog = (barkAt: x and: y = ())'))
+  t.snapshot(compile('Dog = (>> dist = ())'))
 })
 
 test('codegen: method bodies', t => {
-  t.is(compile('doIt = (^3)', 'Method'), "'doIt'(){return this.$int(3)}")
-  t.is(compile('do: x = (^x)', 'Method'), "'do:'(x){return x}")
-  t.is(compile('doIt = (| a b | ^a)', 'Method'), "'doIt'(){let a,b;return a}")
-  t.is(
-    compile('doIt = (| x | x := 3. ^x)', 'Method'),
-    "'doIt'(){let x;x=this.$int(3);return x}"
-  )
+  t.snapshot(compile('doIt = (^3)', 'Method'))
+  t.snapshot(compile('do: x = (^x)', 'Method'))
+  t.snapshot(compile('doIt = (| a b | ^a)', 'Method'))
+  t.snapshot(compile('doIt = (| x | x := 3. ^x)', 'Method'))
 })
 
 test('codegen: message sends', t => {
   //  '4 between: 1 + 1 and: 64 sqrt', 'BlockBody'),
-  t.is(
-    compile('4 between: 2 and: 3', 'BlockBody'),
-    "this.$send(this.$int(4),'between:and:',[this.$int(2),this.$int(3)])"
-  )
-  t.is(
-    compile('4 + 1 between: 2 and: 3', 'BlockBody'),
-    "this.$send(this.$send(this.$int(4),'+',[this.$int(1)]),'between:and:',[this.$int(2),this.$int(3)])"
-  )
-  t.is(
-    compile('16 sqrt + 1 between: 2 negated and: 8 + 1 ', 'BlockBody'),
-    "this.$send(this.$send(this.$send(this.$int(16),'sqrt',[]),'+',[this.$int(1)]),'between:and:',[this.$send(this.$int(2),'negated',[]),this.$send(this.$int(8),'+',[this.$int(1)])])"
-  )
+  t.snapshot(compile('4 between: 2 and: 3', 'BlockBody'))
+  t.snapshot(compile('4 + 1 between: 2 and: 3', 'BlockBody'))
+  t.snapshot(compile('16 sqrt + 1 between: 2 negated and: 8 + 1 ', 'BlockBody'))
 })
 
 test('codegen: literals', t => {
@@ -182,11 +164,11 @@ test('codegen: literals', t => {
 
 test('codegen: blocks', t => {
   // TODO: Implement non-local return.
-  t.is(compile('[]', 'Expression'), '()=>{}')
-  t.is(compile('[:x|]', 'Expression'), '(x)=>{}')
-  t.is(compile('[:x:y|]', 'Expression'), '(x,y)=>{}')
-  t.is(compile('[:x:y|]', 'Expression'), '(x,y)=>{}')
-  t.is(compile('[:x:y|^3.0]', 'Expression'), '(x,y)=>{return 3.0}')
+  t.snapshot(compile('[]', 'Expression'))
+  t.snapshot(compile('[:x|]', 'Expression'))
+  t.snapshot(compile('[:x:y|]', 'Expression'))
+  t.snapshot(compile('[:x:y|]', 'Expression'))
+  t.snapshot(compile('[:x:y|^3.0]', 'Expression'))
 })
 
 test('codegen: other expressions', t => {
