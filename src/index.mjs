@@ -188,16 +188,19 @@ semantics.addOperation('toJS()', {
     return `${ident.toJS()}=${exp.toJS()}`
   },
   KeywordExpression_rec (exp, message) {
-    const { selector, args } = message.selectorAndArgsToJS()
-    return `this.$send(${exp.toJS()},${selector},${args})`
+    const selector = message.selector()
+    const args = getMessageArgs(message)
+    return `${exp.toJS()}['${selector}'](${args})`
   },
   BinaryExpression_rec (exp, message) {
-    const { selector, args } = message.selectorAndArgsToJS()
-    return `this.$send(${exp.toJS()},${selector},${args})`
+    const selector = message.selector()
+    const args = getMessageArgs(message)
+    return `${exp.toJS()}['${selector}'](${args})`
   },
   UnaryExpression_rec (exp, message) {
-    const { selector, args } = message.selectorAndArgsToJS()
-    return `this.$send(${exp.toJS()},${selector},${args})`
+    const selector = message.selector()
+    const args = getMessageArgs(message)
+    return `${exp.toJS()}.${selector}(${args})`
   },
   Result (exp, _) {
     return exp.toJS()
@@ -206,7 +209,7 @@ semantics.addOperation('toJS()', {
     return exp.toJS()
   },
   NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
-    return `this.$block((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
+    return `this._block((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
   },
   BlockPattern (blockArguments, _) {
     return blockArguments.toJS()
@@ -221,7 +224,7 @@ semantics.addOperation('toJS()', {
     return `${this.sourceString}`
   },
   LiteralNumber_int (_, integer) {
-    return `this.$int(${this.sourceString})`
+    return `this._int(${this.sourceString})`
   },
   LiteralSymbol (_, stringOrSelector) {
     return `Symbol.for(${stringOrSelector.asString()})`
@@ -253,26 +256,18 @@ semantics.addOperation('toJS()', {
   }
 })
 
-semantics.addOperation('selectorAndArgsToJS', {
-  KeywordMessage (keywordIter, binaryExpIter) {
-    return {
-      selector: `'${this.selector()}'`,
-      args: `[${binaryExpIter.toJS()}]`
-    }
-  },
-  BinaryMessage (selector, exp) {
-    return {
-      selector: `'${this.selector()}'`,
-      args: `[${exp.toJS()}]`
-    }
-  },
-  UnaryMessage (selector) {
-    return {
-      selector: `'${this.selector()}'`,
-      args: '[]'
-    }
+function getMessageArgs (message) {
+  const { ctorName } = message._node
+  switch (ctorName) {
+    case 'KeywordMessage':
+    case 'BinaryMessage':
+      return message.child(1).toJS()
+    case 'UnaryMessage':
+      return []
+    default:
+      assert(false, `unexpected node type: '${ctorName}'`)
   }
-})
+}
 
 semantics.addOperation('selector', {
   Method (pattern, _eq, _) {

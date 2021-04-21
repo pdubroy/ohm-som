@@ -6,7 +6,7 @@ test('prototype chain', t => {
   const env = new Environment()
   const PrimitiveObject = env.get('$PrimitiveObject')
   const o = new PrimitiveObject()
-  t.is(typeof o.$int, 'function')
+  t.is(typeof o._int, 'function')
   t.is(o.$PrimitiveObject, PrimitiveObject)
 })
 

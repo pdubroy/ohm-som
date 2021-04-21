@@ -151,15 +151,15 @@ test('codegen: message sends', t => {
 })
 
 test('codegen: literals', t => {
-  t.is(compile('#between:and:', 'Expression'), "Symbol.for('between:and:')")
-  t.is(compile("#'x'", 'Expression'), "Symbol.for('x')")
+  t.snapshot(compile('#between:and:', 'Expression'))
+  t.snapshot(compile("#'x'", 'Expression'))
 
-  t.is(compile("''", 'Expression'), "''")
+  t.snapshot(compile("''", 'Expression'))
 
-  t.is(compile('4', 'Expression'), 'this.$int(4)')
-  t.is(compile('-3.14', 'Expression'), '-3.14')
+  t.snapshot(compile('4', 'Expression'))
+  t.snapshot(compile('-3.14', 'Expression'))
 
-  t.is(compile("#(4 'hey')", 'Expression'), "[this.$int(4),'hey']")
+  t.snapshot(compile("#(4 'hey')", 'Expression'))
 })
 
 test('codegen: blocks', t => {
@@ -172,16 +172,8 @@ test('codegen: blocks', t => {
 })
 
 test('codegen: other expressions', t => {
-  t.is(
-    compile('x:=y := 3.0', 'Expression'),
-    'this.$x=this.$y=3.0',
-    'assignment'
-  )
-  t.is(
-    compile('x:=(3.0) + ((4.0))', 'Expression'),
-    "this.$x=this.$send(3.0,'+',[4.0])",
-    'nested terms'
-  )
+  t.snapshot(compile('x:=y := 3.0', 'Expression'))
+  t.snapshot(compile('x:=(3.0) + ((4.0))', 'Expression'))
 })
 
 test('semantics: lexicalVars', t => {

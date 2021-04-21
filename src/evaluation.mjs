@@ -33,10 +33,8 @@ export class Environment {
     g.$false = new g.$False()
 
     // Convenience constructors.
-    g.$int = str => g.$Integer['fromString:'](str)
-    g.$block = fn => new g.$Block(fn)
-
-    g.$send = this.send
+    g._int = str => g.$Integer['fromString:'](str)
+    g._block = fn => new g.$Block(fn)
   }
 
   get (key) {
