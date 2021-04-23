@@ -31,11 +31,9 @@ test('evaluation with boolean classes', t => {
 })
 
 test('block value', t => {
-  const env = new Environment()
-  const { $true } = env.globals
-  t.is(env.eval('[true] value'), $true)
-  t.is(env.eval('[[true] value] value'), $true)
-  t.is(env.eval('[|x| x := 3. x + 1] value asString'), '4')
+  t.is(doIt('[true] value asString'), 'true')
+  t.is(doIt('[[true] value] value asString'), 'true')
+  t.is(doIt('[|x| x := 3. x + 1] value asString'), '4')
 })
 
 test('non-local returns', t => {

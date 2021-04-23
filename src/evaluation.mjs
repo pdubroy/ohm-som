@@ -1,33 +1,31 @@
 import fs from 'fs'
 import path from 'path'
 
-import initBlock from './classes/generated/Block.mjs'
-import initBoolean from './classes/generated/Boolean.mjs'
-import initFalse from './classes/generated/False.mjs'
-import initInteger from './classes/generated/Integer.mjs'
-import initTrue from './classes/generated/True.mjs'
-import initObject from './classes/generated/Object.mjs'
-import initPrimitiveBlock from './classes/primitive/PrimitiveBlock.mjs'
-import initPrimitiveBoolean from './classes/primitive/PrimitiveBoolean.mjs'
-import initPrimitiveInteger from './classes/primitive/PrimitiveInteger.mjs'
-import initPrimitiveObject from './classes/primitive/PrimitiveObject.mjs'
-import { compileClass, generateClass } from './index.mjs'
+import * as primitiveClasses from './classes/primitive/index.mjs'
+import { assert } from './assert.mjs'
+import { generateClass } from './index.mjs'
+import { somClassLibPath } from './paths.mjs'
 import { ReturnValue } from './ReturnValue.mjs'
 
 export class Environment {
   constructor () {
-    const PrimitiveObject = initPrimitiveObject()
+    const PrimitiveObject = primitiveClasses.PrimitiveObject()
     const g = (this.globals = PrimitiveObject.prototype)
     g.$PrimitiveObject = PrimitiveObject
-    g.$Object = initObject(g)
-    g.$PrimitiveInteger = initPrimitiveInteger(g)
-    g.$Integer = initInteger(g)
-    g.$PrimitiveBoolean = initPrimitiveBoolean(g)
-    g.$Boolean = initBoolean(g)
-    g.$PrimitiveBlock = initPrimitiveBlock(g)
-    g.$Block = initBlock(g)
-    g.$True = initTrue(g)
-    g.$False = initFalse(g)
+
+    // Register the classes required for bootstrapping.
+    ;['Object', 'Boolean', 'True', 'False'].forEach(className => {
+      const filename = path.join(somClassLibPath, `${className}.som`)
+      this.registerClass(className, filename)
+    })
+    ;['Block', 'Boolean', 'Integer'].forEach(className => {
+      // TODO: Filename is not appropriate here, fix this!
+      this.registerClass(
+        `Primitive${className}`,
+        `Primitive${className}.mjs`,
+        true
+      )
+    })
 
     g.$true = new g.$True()
     g.$false = new g.$False()
@@ -59,51 +57,84 @@ export class Environment {
     }
   }
 
-  loadClass (filename, superclass = undefined) {
+  loadClass (filename) {
     const source = fs.readFileSync(filename)
     const className = path.basename(filename, '.som')
-    return this._loadClassFromSource(source, className, superclass)
+    return this._loadClassFromSource(source, className)
   }
 
-  _loadClassFromSource (source, expectedClassName = undefined, superclass) {
-    const { className, superclassName, js } = compileClass(source, this)
-    if (!!expectedClassName && expectedClassName !== className) {
-      throw new Error(
-        `class name: expected ${expectedClassName}, got ${className}`
-      )
-    }
-    if (superclassName && superclass) {
-      throw new Error('bad superclass')
+  _loadClassFromSource (source, expectedClassName = undefined) {
+    let { className, output } = generateClass(source)
+    assert(
+      className === expectedClassName,
+      `bad class name - expected ${expectedClassName}, got ${className}`
+    )
+
+    // Hack to deal with improper superclassing!
+    if (!['Object', 'Integer', 'Boolean', 'Block'].includes(className)) {
+      output = output.replace(`$Primitive${className}`, '$Object')
     }
 
-    const loadedClass = this._evalJS(js, { $superclass: superclass })
-    this.set(className, loadedClass)
-    return loadedClass
+    const value = this._evalJS(output)
+    Object.defineProperty(this.globals, `$${className}`, {
+      value,
+      enumberable: true
+    })
+    return value
+  }
+
+  _loadPrimitiveClass (filename) {
+    const className = path.basename(filename, '.mjs')
+    const value = primitiveClasses[className](this.globals)
+    Object.defineProperty(this.globals, `$${className}`, {
+      value,
+      enumberable: true
+    })
+    return value
+  }
+
+  // Registers a class for lazy loading, if it is not already loaded.
+  registerClass (className, filename, isPrimitive = false) {
+    if (!(`$${className}` in this.globals)) {
+      Object.defineProperty(this.globals, `$${className}`, {
+        get: () =>
+          isPrimitive
+            ? this._loadPrimitiveClass(filename)
+            : this.loadClass(filename),
+        configurable: true,
+        enumberable: true
+      })
+    }
   }
 
   _evalJS (js, extraBindings = {}) {
-    const self = new this.globals.$Object()
     // eslint-disable-next-line no-new-func
-    return new Function('globals', js).call(self, this.globals)
+    const r = new Function('globals', js)(this.globals)
+    return r
   }
 
-  eval (source, startRule = undefined) {
-    if (startRule) throw new Error('no allowed!')
-    const classDef = `Main = (run = (${source}))`
-    let { output } = generateClass(classDef)
-
-    // Hack to deal with improper superclassing!
-    output = output.replace('$PrimitiveMain', '$Object')
-
-    const Main = this._evalJS(output)
+  eval (source) {
+    const Main = this._loadClassFromSource(`Main = (run = (${source}))`, 'Main')
     return new Main().run()
   }
 }
 
-export function doIt (source, startRule = undefined) {
-  const ctx = new Environment()
+// TODO: Factor out all this stuff into separate a class loader module.
+function registerStdlibClasses (env) {
+  for (const entry of fs.readdirSync(somClassLibPath, {
+    withFileTypes: true
+  })) {
+    const className = path.basename(entry.name, '.som')
+    env.registerClass(className, path.join(somClassLibPath, entry.name))
+  }
+}
+
+export function doIt (source) {
+  const env = new Environment()
+  registerStdlibClasses(env)
+
   try {
-    return ctx.eval(source, startRule)
+    return env.eval(source)
   } catch (e) {
     if (e instanceof ReturnValue) return e.v
     throw e
