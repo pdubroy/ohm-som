@@ -323,6 +323,21 @@ semantics.addOperation('params', {
   }
 })
 
+semantics.addOperation('hasPrimitiveMethods()', {
+  _nonterminal (children) {
+    return children.some(c => c.hasPrimitiveMethods())
+  },
+  _iter (children) {
+    return children.some(c => c.hasPrimitiveMethods())
+  },
+  Method (pattern, _, primitiveOrMethodBlock) {
+    return primitiveOrMethodBlock._node.ctorName === 'primitive'
+  },
+  _terminal () {
+    return false
+  }
+})
+
 export function compile (source, startRule = undefined) {
   const result = grammar.match(source, startRule)
   return semantics(result).toJS()
@@ -334,16 +349,24 @@ export function compileClass (source, env) {
     throw new Error(result.message)
   }
   // TODO: Use `env` to ensure there are no undefined references.
+  const root = semantics(result)
   return {
-    className: semantics(result).className(),
-    superclassName: semantics(result).superclassName(),
-    js: `${semantics(result).toJS()}`
+    className: root.className(),
+    superclassName: root.superclassName(),
+    js: root.toJS(),
+    hasPrimitiveMethods: root.hasPrimitiveMethods()
   }
 }
 
 export function generateClass (source, prettyFn = s => s) {
-  const { className, superclassName, js } = compileClass(source)
-  const superclassDecl = generateSuperclassDecl(className, superclassName)
+  const { className, superclassName, js, hasPrimitiveMethods } = compileClass(
+    source
+  )
+  const superclassDecl = generateSuperclassDecl(
+    className,
+    superclassName,
+    hasPrimitiveMethods
+  )
   const output = `${superclassDecl};\nreturn ${js}`
   return {
     className,
@@ -355,8 +378,15 @@ function generateClassExport (generatedCode) {
   return `export default function (globals) {\n${generatedCode}\n}`
 }
 
-function generateSuperclassDecl (className, superclassName) {
-  let actualSuperclassname = superclassName || `Primitive${className}`
+function generateSuperclassDecl (
+  className,
+  superclassName,
+  hasPrimitiveMethods
+) {
+  let actualSuperclassname = hasPrimitiveMethods
+    ? `Primitive${className}`
+    : superclassName || 'Object'
+
   /* In the SOM definition, Object claims to inherit from `nil`, but we want
      it to inherit from PrimitiveObject. */
   if (superclassName === 'nil') {

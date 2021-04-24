@@ -68,18 +68,12 @@ export class Environment {
   }
 
   _loadClassFromSource (source, expectedClassName = undefined) {
-    let { className, output } = generateClass(source)
+    const { className, output } = generateClass(source)
     assert(
-      className === expectedClassName,
+      expectedClassName && className === expectedClassName,
       `bad class name - expected ${expectedClassName}, got ${className}`
     )
 
-    // Hack to deal with improper superclassing!
-    if (
-      !['Block', 'Boolean', 'Class', 'Integer', 'Object'].includes(className)
-    ) {
-      output = output.replace(`$Primitive${className}`, '$Object')
-    }
     const value = this._evalJS(output)
     Object.defineProperty(this.globals, `$${className}`, {
       value,
