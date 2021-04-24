@@ -1,5 +1,6 @@
 import fs from 'fs'
 import path from 'path'
+// import prettier from 'prettier-standard'
 
 import * as primitiveClasses from './classes/primitive/index.mjs'
 import { assert } from './assert.mjs'
@@ -10,15 +11,16 @@ import { ReturnValue } from './ReturnValue.mjs'
 export class Environment {
   constructor () {
     const PrimitiveObject = primitiveClasses.PrimitiveObject()
+    delete PrimitiveObject.name
     const g = (this.globals = PrimitiveObject.prototype)
     g.$PrimitiveObject = PrimitiveObject
 
     // Register the classes required for bootstrapping.
-    ;['Object', 'Boolean', 'True', 'False'].forEach(className => {
+    ;['Object', 'Class', 'Boolean', 'True', 'False'].forEach(className => {
       const filename = path.join(somClassLibPath, `${className}.som`)
       this.registerClass(className, filename)
     })
-    ;['Block', 'Boolean', 'Integer'].forEach(className => {
+    ;['Block', 'Boolean', 'Class', 'Integer'].forEach(className => {
       // TODO: Filename is not appropriate here, fix this!
       this.registerClass(
         `Primitive${className}`,
@@ -26,6 +28,8 @@ export class Environment {
         true
       )
     })
+    // The PrimitiveObject class is an instance of `Class`.
+    Object.setPrototypeOf(g.$PrimitiveObject, g.$Class.prototype)
 
     g.$true = new g.$True()
     g.$false = new g.$False()
@@ -71,15 +75,19 @@ export class Environment {
     )
 
     // Hack to deal with improper superclassing!
-    if (!['Object', 'Integer', 'Boolean', 'Block'].includes(className)) {
+    if (
+      !['Block', 'Boolean', 'Class', 'Integer', 'Object'].includes(className)
+    ) {
       output = output.replace(`$Primitive${className}`, '$Object')
     }
-
     const value = this._evalJS(output)
     Object.defineProperty(this.globals, `$${className}`, {
       value,
       enumberable: true
     })
+    // Delete the built-in Function.name as it conflicts with Class>>#name.
+    // TODO: Consider wrapping the native classes.
+    delete value.name
     return value
   }
 
@@ -90,6 +98,9 @@ export class Environment {
       value,
       enumberable: true
     })
+    // Delete the built-in Function.name as it conflicts with Class>>#name.
+    // TODO: Consider wrapping the native classes.
+    delete value.name
     return value
   }
 

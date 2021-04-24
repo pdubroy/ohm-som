@@ -41,3 +41,11 @@ test('non-local returns', t => {
   t.is(doIt("[[^'a'] value. 'b'] value. 'c'"), 'a')
   t.is(doIt("true ifTrue: ['a'] ifFalse: ['b']"), 'a')
 })
+
+test('classes are objects too', t => {
+  t.is(doIt('True isNil asString'), 'false')
+})
+
+test.failing('strings are wrapped', t => {
+  t.is(doIt('(True ifNil: [3]) asString'), 'True')
+})
