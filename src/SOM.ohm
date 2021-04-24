@@ -130,7 +130,7 @@ SOM {
 
     operator =
       not | and | or | star | div | mod | plus | equal | more | less | comma | at | per | minus
-    operatorSequence = operator+
+    operatorSequence = ~separator operator+
 
     newBlock = "["
     endBlock = "]"

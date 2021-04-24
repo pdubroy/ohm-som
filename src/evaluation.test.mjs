@@ -42,6 +42,12 @@ test('non-local returns', t => {
   t.is(doIt("true ifTrue: ['a'] ifFalse: ['b']"), 'a')
 })
 
+test('class methods', t => {
+  const env = new Environment()
+  const Thing = env._loadClassFromSource('Thing = (---- twiddle = ())')
+  t.is(typeof Thing.twiddle, 'function')
+})
+
 test('classes are objects too', t => {
   t.is(doIt('True isNil asString'), 'false')
 })

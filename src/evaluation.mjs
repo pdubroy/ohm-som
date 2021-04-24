@@ -70,7 +70,7 @@ export class Environment {
   _loadClassFromSource (source, expectedClassName = undefined) {
     const { className, output } = generateClass(source)
     assert(
-      expectedClassName && className === expectedClassName,
+      !expectedClassName || className === expectedClassName,
       `bad class name - expected ${expectedClassName}, got ${className}`
     )
 
