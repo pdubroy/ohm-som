@@ -20,13 +20,8 @@ export class Environment {
       const filename = path.join(somClassLibPath, `${className}.som`)
       this.registerClass(className, filename)
     })
-    ;['Block', 'Boolean', 'Class', 'Integer'].forEach(className => {
-      // TODO: Filename is not appropriate here, fix this!
-      this.registerClass(
-        `Primitive${className}`,
-        `Primitive${className}.mjs`,
-        true
-      )
+    ;['Array', 'Block', 'Boolean', 'Class', 'Integer'].forEach(className => {
+      this.registerClass(`Primitive${className}`, undefined, true)
     })
     // The PrimitiveObject class is an instance of `Class`.
     Object.setPrototypeOf(g.$PrimitiveObject, g.$Class.prototype)
@@ -77,13 +72,13 @@ export class Environment {
     return this._finishLoadingClass(className, theClass)
   }
 
-  _loadPrimitiveClass (filename) {
-    const className = path.basename(filename, '.mjs')
+  _loadPrimitiveClass (className) {
     const theClass = primitiveClasses[className](this.globals)
     return this._finishLoadingClass(className, theClass)
   }
 
   _finishLoadingClass (className, value) {
+    console.log(className)
     Object.defineProperty(this.globals, `$${className}`, {
       value,
       configurable: true,
@@ -96,12 +91,12 @@ export class Environment {
   }
 
   // Registers a class for lazy loading, if it is not already loaded.
-  registerClass (className, filename, isPrimitive = false) {
+  registerClass (className, filename = undefined, isPrimitive = false) {
     if (!(`$${className}` in this.globals)) {
       Object.defineProperty(this.globals, `$${className}`, {
         get: () =>
           isPrimitive
-            ? this._loadPrimitiveClass(filename)
+            ? this._loadPrimitiveClass(className)
             : this.loadClass(filename),
         configurable: true,
         enumberable: true

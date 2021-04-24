@@ -1,3 +1,4 @@
+export { default as PrimitiveArray } from './PrimitiveArray.mjs'
 export { default as PrimitiveBlock } from './PrimitiveBlock.mjs'
 export { default as PrimitiveBoolean } from './PrimitiveBoolean.mjs'
 export { default as PrimitiveClass } from './PrimitiveClass.mjs'
