@@ -121,17 +121,29 @@ semantics.addOperation('toJS()', {
     this.lexicalVars // eslint-disable-line no-unused-expressions
 
     const className = id.toJS()
+    let staticMethods = ''
+    let staticVars = ''
+
+    const classSlots = classSlotsOpt.child(0)
+    if (classSlots) {
+      const [, classVarsOpt, , classMethodIter] = classSlots.children
+      staticMethods = classMethodIter.children
+        .filter(m => !m.isPrimitive())
+        .map(m => `static ${m.toJS()}`)
+        .join('\n')
+      staticVars = classVarsOpt
+        .toJS()
+        .map(id => `${id}=undefined`)
+        .join(',')
+    }
+
     const classDecl = [
       `class ${className} extends $superclass {`,
       instSlots.toJS(),
+      staticMethods,
       '}'
     ].join('')
-    if (classSlotsOpt._node.hasChildren()) {
-      const statics = `${classSlotsOpt.toJS()}`
-      return `Object.assign(${classDecl},${statics});`
-    } else {
-      return classDecl
-    }
+    return `Object.assign(${classDecl},{${staticVars}});`
   },
   identifier (first, rest) {
     const id = this.sourceString
@@ -141,24 +153,18 @@ semantics.addOperation('toJS()', {
     const identifiers = identOpt.toJS()[0] || []
     return (
       identifiers.map(id => `${id}=undefined;`).join('\n') +
-      methodIter.toJS().join('\n')
+      methodIter.children
+        .filter(m => !m.isPrimitive())
+        .map(m => m.toJS())
+        .join('\n')
     )
   },
-  ClassSlots (_, identOpt, _end, methodIter) {
-    let props = []
-    if (identOpt._node.hasChildren()) {
-      props = identOpt.toJS()[0].map(name => `${name}: undefined`)
-    }
-    const methods = methodIter.toJS()
-    return '{' + [...props, ...methods].join(',') + '}'
-  },
   Method (pattern, _eq, body) {
+    assert(!this.isPrimitive(), 'toJS() not implemented on primtive methods')
+
     // Calculate the `lexicalVars` attribute on all nodes.
     this.lexicalVars // eslint-disable-line no-unused-expressions
 
-    if (body.isPrimitive()) {
-      return ''
-    }
     const selector = pattern.selector()
     const paramList = pattern.params().join(', ')
     return `'${selector}'(${paramList}){${body.toJS()}}`
@@ -392,7 +398,10 @@ function generateSuperclassDecl (
   if (superclassName === 'nil') {
     actualSuperclassname = 'PrimitiveObject'
   }
-  return `const $superclass = globals.$${actualSuperclassname}`
+  return [
+    `const $superclass = globals.$${actualSuperclassname}`,
+    `if (!$superclass) throw new Error('undefined superclass: ${actualSuperclassname}')`
+  ].join('\n')
 }
 
 export function generateClassFromFile (filename, prettyFn = s => s) {

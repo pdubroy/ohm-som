@@ -46,6 +46,9 @@ test('class methods', t => {
   const env = new Environment()
   const Thing = env._loadClassFromSource('Thing = (---- twiddle = ())')
   t.is(typeof Thing.twiddle, 'function')
+
+  t.is(env.eval('Thing twiddle'), undefined)
+  t.is(env.eval('Thing new isNil asString'), 'false')
 })
 
 test('classes are objects too', t => {

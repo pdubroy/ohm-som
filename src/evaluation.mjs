@@ -73,23 +73,20 @@ export class Environment {
       !expectedClassName || className === expectedClassName,
       `bad class name - expected ${expectedClassName}, got ${className}`
     )
-
-    const value = this._evalJS(output)
-    Object.defineProperty(this.globals, `$${className}`, {
-      value,
-      enumberable: true
-    })
-    // Delete the built-in Function.name as it conflicts with Class>>#name.
-    // TODO: Consider wrapping the native classes.
-    delete value.name
-    return value
+    const theClass = this._evalJS(output)
+    return this._finishLoadingClass(className, theClass)
   }
 
   _loadPrimitiveClass (filename) {
     const className = path.basename(filename, '.mjs')
-    const value = primitiveClasses[className](this.globals)
+    const theClass = primitiveClasses[className](this.globals)
+    return this._finishLoadingClass(className, theClass)
+  }
+
+  _finishLoadingClass (className, value) {
     Object.defineProperty(this.globals, `$${className}`, {
       value,
+      configurable: true,
       enumberable: true
     })
     // Delete the built-in Function.name as it conflicts with Class>>#name.
@@ -114,13 +111,16 @@ export class Environment {
 
   _evalJS (js, extraBindings = {}) {
     // eslint-disable-next-line no-new-func
-    const r = new Function('globals', js)(this.globals)
-    return r
+    return new Function('globals', js)(this.globals)
   }
 
   eval (source) {
-    const Main = this._loadClassFromSource(`Main = (run = (${source}))`, 'Main')
-    return new Main().run()
+    const UnknownObject = this._loadClassFromSource(
+      `UnknownObject = (run = (${source}))`
+    )
+    const result = new UnknownObject().run()
+    delete this.globals.$UnknownObject
+    return result
   }
 }
 
