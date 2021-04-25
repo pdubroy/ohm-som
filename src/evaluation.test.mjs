@@ -57,8 +57,10 @@ test('classes are objects too', t => {
   t.is(doIt('Integer new class name'), 'Integer')
 })
 
-test.failing('problem with Vector constructor', t => {
-  t.is(doIt('(Vector new: 10) name'), 'Vector')
+test.failing('implicit self return', t => {
+  const env = new Environment()
+  env._loadClassFromSource("Thing = (name = (^'Thing1') yourself = ())")
+  t.is(env.eval('Thing new yourself name'), 'Thing1')
 })
 
 test.failing('strings are wrapped', t => {

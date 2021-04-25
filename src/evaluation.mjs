@@ -63,8 +63,7 @@ export class Environment {
     const className = path.basename(filename, '.som')
     const jsFilename = `${filename}.js`
 
-    if (process.env.USE_PREGENERATED_CLASSES) {
-      console.log(`${className} from ${jsFilename}`)
+    if (process.env.USE_PREGENERATED_CLASSES && fs.existsSync(jsFilename)) {
       const jsSource = fs.readFileSync(jsFilename)
       return this._finishLoadingClass(className, this._evalJS(jsSource))
     }

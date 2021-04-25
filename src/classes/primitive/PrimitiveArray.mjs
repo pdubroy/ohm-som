@@ -2,7 +2,7 @@ export default function (globals) {
   return class PrimitiveArray extends globals.$Object {
     constructor (arr = []) {
       super()
-      this._value = arr
+      this._arr = arr
     }
 
     'at:' (index) {
@@ -18,7 +18,7 @@ export default function (globals) {
     }
 
     static 'new:' (length) {
-      return new this(new Array(length))
+      return new this(new Array(length.val))
     }
   }
 }
