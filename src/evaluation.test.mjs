@@ -53,6 +53,12 @@ test('class methods', t => {
 
 test('classes are objects too', t => {
   t.is(doIt('True isNil asString'), 'false')
+  t.is(doIt('Integer name'), 'Integer')
+  t.is(doIt('Integer new class name'), 'Integer')
+})
+
+test.failing('problem with Vector constructor', t => {
+  t.is(doIt('(Vector new: 10) name'), 'Vector')
 })
 
 test.failing('strings are wrapped', t => {

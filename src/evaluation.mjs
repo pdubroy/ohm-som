@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-// import prettier from 'prettier-standard'
+import prettier from 'prettier-standard'
 
 import * as primitiveClasses from './classes/primitive/index.mjs'
 import { assert } from './assert.mjs'
@@ -11,15 +11,18 @@ import { ReturnValue } from './ReturnValue.mjs'
 export class Environment {
   constructor () {
     const PrimitiveObject = primitiveClasses.PrimitiveObject()
+    PrimitiveObject._name = PrimitiveObject.name
     delete PrimitiveObject.name
     const g = (this.globals = PrimitiveObject.prototype)
     g.$PrimitiveObject = PrimitiveObject
 
     // Register the classes required for bootstrapping.
-    ;['Object', 'Class', 'Boolean', 'True', 'False'].forEach(className => {
-      const filename = path.join(somClassLibPath, `${className}.som`)
-      this.registerClass(className, filename)
-    })
+    ;['Object', 'Class', 'Boolean', 'True', 'False', 'Vector'].forEach(
+      className => {
+        const filename = path.join(somClassLibPath, `${className}.som`)
+        this.registerClass(className, filename)
+      }
+    )
     ;['Array', 'Block', 'Boolean', 'Class', 'Integer'].forEach(className => {
       this.registerClass(`Primitive${className}`, undefined, true)
     })
@@ -57,17 +60,36 @@ export class Environment {
   }
 
   loadClass (filename) {
-    const source = fs.readFileSync(filename)
     const className = path.basename(filename, '.som')
-    return this._loadClassFromSource(source, className)
+    const jsFilename = `${filename}.js`
+
+    if (process.env.USE_PREGENERATED_CLASSES) {
+      console.log(`${className} from ${jsFilename}`)
+      const jsSource = fs.readFileSync(jsFilename)
+      return this._finishLoadingClass(className, this._evalJS(jsSource))
+    }
+
+    const source = fs.readFileSync(filename)
+    return this._loadClassFromSource(source, className, filename)
   }
 
-  _loadClassFromSource (source, expectedClassName = undefined) {
+  _loadClassFromSource (
+    source,
+    expectedClassName = undefined,
+    filename = undefined
+  ) {
     const { className, output } = generateClass(source)
     assert(
       !expectedClassName || className === expectedClassName,
       `bad class name - expected ${expectedClassName}, got ${className}`
     )
+
+    if (process.env.DEBUG_GENERATED_CLASSES) {
+      const jsFilename = `${filename}.js`
+      fs.writeFileSync(jsFilename, prettier.format(output))
+      console.log(`wrote ${jsFilename}`)
+    }
+
     const theClass = this._evalJS(output)
     return this._finishLoadingClass(className, theClass)
   }
@@ -78,7 +100,6 @@ export class Environment {
   }
 
   _finishLoadingClass (className, value) {
-    console.log(className)
     Object.defineProperty(this.globals, `$${className}`, {
       value,
       configurable: true,
@@ -86,6 +107,7 @@ export class Environment {
     })
     // Delete the built-in Function.name as it conflicts with Class>>#name.
     // TODO: Consider wrapping the native classes.
+    value._name = value.name
     delete value.name
     return value
   }

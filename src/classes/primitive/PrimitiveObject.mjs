@@ -5,7 +5,7 @@ export default function () {
     }
 
     class () {
-      throw new Error('not implemented')
+      return this.constructor
     }
 
     objectSize () {

@@ -1,8 +1,7 @@
 export default function (globals) {
   return class PrimitiveClass extends globals.$Object {
     name () {
-      // TODO: This should be wrapped.
-      return this.constructor.name
+      return this._name
     }
 
     new () {
