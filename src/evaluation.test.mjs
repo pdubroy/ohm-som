@@ -47,7 +47,7 @@ test('class methods', t => {
   const Thing = env._loadClassFromSource('Thing = (---- twiddle = ())')
   t.is(typeof Thing.twiddle, 'function')
 
-  t.is(env.eval('Thing twiddle'), undefined)
+  t.is(env.eval('Thing twiddle name'), 'Thing')
   t.is(env.eval('Thing new isNil asString'), 'false')
 })
 
@@ -57,7 +57,7 @@ test('classes are objects too', t => {
   t.is(doIt('Integer new class name'), 'Integer')
 })
 
-test.failing('implicit self return', t => {
+test('implicit self return', t => {
   const env = new Environment()
   env._loadClassFromSource("Thing = (name = (^'Thing1') yourself = ())")
   t.is(env.eval('Thing new yourself name'), 'Thing1')

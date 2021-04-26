@@ -171,7 +171,7 @@ semantics.addOperation('toJS()', {
   },
   MethodBlock (_open, blockContentsOpt, _close) {
     const body = blockContentsOpt.toJS().join('')
-    return `const _rv={};try{${body}}catch(e){if(e===_rv)return e.v;throw e}`
+    return `const _rv={};try{${body}}catch(e){if(e===_rv)return e.v;throw e}return this`
   },
   BlockContents (_or, localDefsOpt, _, blockBody) {
     return localDefsOpt.toJS().join('') + blockBody.toJS()
