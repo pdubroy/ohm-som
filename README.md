@@ -4,9 +4,15 @@ A JavaScript implementation of [SOM](http://som-st.github.io/), a minimal Smallt
 
 ⚠️ **WARNING:** Very much a work in progress. ⚠️
 
-Right now it's just an extremely basic SOM-to-JavaScript compiler using [Ohm](https://github.com/harc/ohm).
-
 ## Scripts
 
-- `npm run generate-classes` generate JS code for the SOM standard library. This must be done before running the tests, or after changing the codegen.
-- `npm test` run the tests (doy!)
+- `npm test` runs the smaller unit / integration tests (should all pass)
+- `npm run som-test-suite` runs the SOM test suite (not expected to pass yet)
+
+### Debugging
+
+There are two environment variables you can set to make debugging easier.
+
+Use `DEBUG_GENERATED_CLASSES=true` to write out the generated JS code for all SOM classes as they are loaded. These are written to the same directory as the original SOM source. E.g., for Array.som, the generated code will be written to Array.som.js.
+
+If you set `USE_PREGENERATED_CLASSES=true`, the runtime will use the pre-generated JS code from the appropriate `.som.js` file if it exists. This allows you to easily insert console.log statements, etc. into the JavaScript code, making it easier to debug runtime issues.

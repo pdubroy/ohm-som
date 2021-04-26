@@ -7,7 +7,8 @@
     "test": "ava",
     "lint": "prettier-standard --check && standard",
     "format": "prettier-standard --format && standard --fix",
-    "generate-classes": "node scripts/generateClassLib.mjs"
+    "generate-classes": "node scripts/generateClassLib.mjs",
+    "som-test-suite": "node scripts/runSomTestSuite.mjs"
   },
   "author": "Patrick Dubroy <pdubroy@gmail.com>",
   "license": "MIT",
