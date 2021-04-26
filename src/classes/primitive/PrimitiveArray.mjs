@@ -10,7 +10,7 @@ export default function (globals) {
     }
 
     'at:put:' (index, value) {
-      return (this._arr[index] = value)
+      return (this._arr[index._val] = value)
     }
 
     length () {

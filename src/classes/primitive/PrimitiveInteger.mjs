@@ -2,26 +2,26 @@ export default function (globals) {
   class PrimitiveInteger extends globals.$Object {
     constructor (val) {
       super()
-      this.val = val
+      this._val = val
     }
 
     // Arithmetic
     // ----------
 
-    '+' (argument) {
-      return new this.constructor(this.val + argument.val)
+    '+' ({ _val }) {
+      return new this.constructor(this._val + _val)
     }
 
-    '-' (argument) {
-      return new this.constructor(this.val - argument.val)
+    '-' ({ _val }) {
+      return new this.constructor(this._val - _val)
     }
 
-    '*' (argument) {
-      return new this.constructor(this.val * argument.val)
+    '*' ({ _val }) {
+      return new this.constructor(this._val * _val)
     }
 
-    '/' (argument) {
-      return new this.constructor(this.val / argument.val)
+    '/' ({ _val }) {
+      return new this.constructor(this._val / _val)
     }
 
     '//' (argument) {
@@ -62,19 +62,19 @@ export default function (globals) {
     }
 
     // Comparing
-    '=' (argument) {
-      throw new Error('not implemented')
+    '=' ({ _val }) {
+      return this._val === _val ? this.$true : this.$false
     }
 
-    '<' (argument) {
-      throw new Error('not implemented')
+    '<' ({ _val }) {
+      return this._val < _val ? this.$true : this.$false
     }
 
     // Converting
     // ----------
 
     asString () {
-      return `${this.val}`
+      return `${this._val}`
     }
 
     as32BitSignedValue () {

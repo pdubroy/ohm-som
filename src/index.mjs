@@ -313,7 +313,7 @@ semantics.addOperation('asString', {
     return `'${this.sourceString}'`
   },
   string (_open, charIter, _close) {
-    return this.sourceString
+    return '`' + charIter.sourceString + '`'
   }
 })
 
