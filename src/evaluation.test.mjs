@@ -10,6 +10,15 @@ test('prototype chain', t => {
   t.is(o.$PrimitiveObject, PrimitiveObject)
 })
 
+test.failing('class hierarchy', t => {
+  t.is(doIt('Object name'), 'Object')
+  t.is(doIt('Object class name'), 'Object class')
+  t.is(doIt('Object superclass name'), 'nil')
+  t.is(doIt('Object class class name'), 'Metaclass')
+  t.is(doIt('Metaclass class class name'), 'Metaclass')
+  t.is(doIt('Set class methods size asString'), '1')
+})
+
 test('basic eval w/ PrimitiveInteger', t => {
   t.is(doIt('(3 + 4) asString'), '7')
   t.is(doIt('| x y | x := 3. y := 4. ^(x + y) asString'), '7')

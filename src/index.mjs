@@ -249,7 +249,7 @@ semantics.addOperation('toJS()', {
     return 'this'
   },
   super (_) {
-    return 'super'
+    return 'this._super(this)'
   },
   nil (_) {
     return 'this.$nil'

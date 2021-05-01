@@ -2,8 +2,9 @@ import fs from 'fs'
 import path from 'path'
 import prettier from 'prettier-standard'
 
-import * as primitiveClasses from './classes/primitive/index.mjs'
 import { assert } from './assert.mjs'
+import * as primitiveClasses from './classes/primitive/index.mjs'
+import { createSuperProxy } from './runtime.mjs'
 import { generateClass } from './index.mjs'
 import { somClassLibPath } from './paths.mjs'
 import { ReturnValue } from './ReturnValue.mjs'
@@ -35,6 +36,8 @@ export class Environment {
     // Convenience constructors.
     g._int = str => g.$Integer['fromString:'](str)
     g._block = fn => new g.$Block(fn)
+
+    g._super = target => createSuperProxy(target)
   }
 
   get (key) {
