@@ -18,4 +18,4 @@ classpath.forEach(dir => {
 const TestHarness = env.loadClass(
   path.join(somTestSuitePath, 'TestHarness.som')
 )
-new TestHarness().runAllSuites()
+TestHarness.new().runAllSuites()

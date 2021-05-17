@@ -7,7 +7,8 @@ export default {
       return Object.getPrototypeOf(this).class()
     },
     _newWithProps (props) {
-      return Object.assign(this.new(), props)
+      const self = Object.create(this._prototype)
+      return Object.assign(self, props)
     },
     new () {
       return Object.create(this._prototype)

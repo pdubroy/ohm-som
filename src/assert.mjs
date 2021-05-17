@@ -5,6 +5,8 @@ export function assert (cond, message = undefined) {
 }
 
 export function checkNotNull (x, message = undefined) {
-  assert(x != null, message || `expected non-null value: ${x}`)
+  if (x == null) {
+    throw new Error(message || `expected non-null value: ${x}`)
+  }
   return x
 }

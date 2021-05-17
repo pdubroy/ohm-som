@@ -21,6 +21,7 @@ export class Environment {
 
     g.$true = g.$True.new()
     g.$false = g.$False.new()
+    g.$nil = g.$Nil.new()
 
     // Convenience constructors.
     g._int = str => g.$Integer['fromString:'](str)
@@ -80,6 +81,11 @@ export class Environment {
       false
     )
     return UnknownObject.new().run()
+  }
+
+  loadClass (filename, save = true) {
+    const source = fs.readFileSync(filename)
+    return this._loadClassFromSource(source)
   }
 
   _loadClassFromSource (source, save = true) {
