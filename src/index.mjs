@@ -203,7 +203,9 @@ semantics.addOperation('toJS()', {
     return exp.toJS()
   },
   NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
-    return `this._block((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
+    const blockPattern = blockPatternOpt.child(0)
+    const arity = this.blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
+    return `this._block${arity}((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
   },
   BlockPattern (blockArguments, _) {
     return blockArguments.toJS()
@@ -262,6 +264,19 @@ function getMessageArgs (message) {
       assert(false, `unexpected node type: '${ctorName}'`)
   }
 }
+
+semantics.addOperation('blockArity', {
+  NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
+    const blockPattern = blockPatternOpt.child(0)
+    return blockPattern ? blockPattern.blockArity() : 0
+  },
+  BlockPattern (blockArguments, _) {
+    return blockArguments.blockArity()
+  },
+  BlockArguments (_, identIter) {
+    return identIter._node.numChildren()
+  }
+})
 
 semantics.addOperation('selector', {
   Method (pattern, _eq, _) {

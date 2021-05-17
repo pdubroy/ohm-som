@@ -25,7 +25,9 @@ export class Environment {
 
     // Convenience constructors.
     g._int = str => g.$Integer['fromString:'](str)
-    g._block = fn => g.$Block._new(fn)
+    g._block1 = fn => g.$Block1._new(fn)
+    g._block2 = fn => g.$Block2._new(fn)
+    g._block3 = fn => g.$Block3._new(fn)
 
     g._super = createSuperProxy
   }
