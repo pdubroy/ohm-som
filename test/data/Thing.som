@@ -1,0 +1,6 @@
+Thing = (
+	asString = (^'a thing')
+
+	----
+	className = (^'Thing!')
+)

@@ -1,8 +1,12 @@
 import test from 'ava'
 
-import { Object, Metaclass, nil } from './kernel.mjs'
+import { createKernelClasses } from './kernel.mjs'
+
+const { Object, Metaclass } = createKernelClasses()
 
 test('kernel classes', t => {
+  const nil = (Object._prototype.$nil = null)
+
   t.is(Object.name(), 'Object')
   t.is(Object.class().name(), 'Object class')
   t.is(Object.superclass(), nil)
@@ -18,6 +22,7 @@ test('kernel classes', t => {
       .name(),
     'Metaclass'
   )
+  //  t.is(nil.class().name(), 'Nil')
 
   //  t.is(
   //    Set.class()

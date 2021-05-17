@@ -1,6 +1,5 @@
 import fs from 'fs'
 import ohm from 'ohm-js'
-import path from 'path'
 
 import { assert } from './assert.mjs'
 import { somGrammarPath } from './paths.mjs'
@@ -121,29 +120,14 @@ semantics.addOperation('toJS()', {
     this.lexicalVars // eslint-disable-line no-unused-expressions
 
     const className = id.toJS()
-    let staticMethods = ''
-    let staticVars = ''
-
-    const classSlots = classSlotsOpt.child(0)
-    if (classSlots) {
-      const [, classVarsOpt, , classMethodIter] = classSlots.children
-      staticMethods = classMethodIter.children
-        .filter(m => !m.isPrimitive())
-        .map(m => `static ${m.toJS()}`)
-        .join('\n')
-      staticVars = classVarsOpt
-        .toJS()
-        .map(id => `${id}=undefined`)
-        .join(',')
-    }
-
-    const classDecl = [
-      `class ${className} extends $superclass {`,
-      instSlots.toJS(),
-      staticMethods,
-      '}'
-    ].join('')
-    return `Object.assign(${classDecl},{${staticVars}});`
+    const superclassName = superclass.toJS() || 'Object'
+    return (
+      `({className:'${className}',superclassName:'${superclassName}'` +
+      `,instanceSlots:{${instSlots.toJS()}},classSlots:{${classSlotsOpt.toJS()}}})`
+    )
+  },
+  Superclass (ident, _) {
+    return ident.toJS()
   },
   identifier (first, rest) {
     const id = this.sourceString
@@ -151,13 +135,17 @@ semantics.addOperation('toJS()', {
   },
   InstanceSlots (_, identOpt, _end, methodIter) {
     const identifiers = identOpt.toJS()[0] || []
-    return (
-      identifiers.map(id => `${id}=undefined;`).join('\n') +
-      methodIter.children
-        .filter(m => !m.isPrimitive())
-        .map(m => m.toJS())
-        .join('\n')
-    )
+    return [
+      ...identifiers.map(id => `${id}: undefined`),
+      ...methodIter.children.filter(m => !m.isPrimitive()).map(m => m.toJS())
+    ].join(',')
+  },
+  ClassSlots (_, identOpt, _end, methodIter) {
+    const identifiers = identOpt.toJS()[0] || []
+    return [
+      ...identifiers.map(id => `${id}: undefined`),
+      ...methodIter.children.filter(m => !m.isPrimitive()).map(m => m.toJS())
+    ].join(',')
   },
   Method (pattern, _eq, body) {
     assert(!this.isPrimitive(), 'toJS() not implemented on primtive methods')
@@ -362,55 +350,4 @@ export function compileClass (source, env) {
     js: root.toJS(),
     hasPrimitiveMethods: root.hasPrimitiveMethods()
   }
-}
-
-export function generateClass (source, prettyFn = s => s) {
-  const { className, superclassName, js, hasPrimitiveMethods } = compileClass(
-    source
-  )
-  const superclassDecl = generateSuperclassDecl(
-    className,
-    superclassName,
-    hasPrimitiveMethods
-  )
-  const output = `${superclassDecl};\nreturn ${js}`
-  return {
-    className,
-    output: prettyFn(output)
-  }
-}
-
-function generateClassExport (generatedCode) {
-  return `export default function (globals) {\n${generatedCode}\n}`
-}
-
-function generateSuperclassDecl (
-  className,
-  superclassName,
-  hasPrimitiveMethods
-) {
-  let actualSuperclassname = hasPrimitiveMethods
-    ? `Primitive${className}`
-    : superclassName || 'Object'
-
-  /* In the SOM definition, Object claims to inherit from `nil`, but we want
-     it to inherit from PrimitiveObject. */
-  if (superclassName === 'nil') {
-    actualSuperclassname = 'PrimitiveObject'
-  }
-  return [
-    `const $superclass = globals.$${actualSuperclassname}`,
-    `if (!$superclass) throw new Error('undefined superclass: ${actualSuperclassname}')`
-  ].join('\n')
-}
-
-export function generateClassFromFile (filename, prettyFn = s => s) {
-  const source = fs.readFileSync(filename)
-  const expectedClassName = path.basename(filename, '.som')
-  const { className, output } = generateClass(source, prettyFn)
-  assert(
-    expectedClassName === className,
-    `class name: expected ${expectedClassName}, got ${className}`
-  )
-  return { className, output: generateClassExport(output) }
 }

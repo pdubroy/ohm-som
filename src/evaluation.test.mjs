@@ -2,14 +2,6 @@ import test from 'ava'
 
 import { doIt, Environment } from './evaluation.mjs'
 
-test('prototype chain', t => {
-  const env = new Environment()
-  const PrimitiveObject = env.get('$PrimitiveObject')
-  const o = new PrimitiveObject()
-  t.is(typeof o._int, 'function')
-  t.is(o.$PrimitiveObject, PrimitiveObject)
-})
-
 test.failing('class hierarchy', t => {
   t.is(doIt('Object name'), 'Object')
   t.is(doIt('Object class name'), 'Object class')
@@ -68,7 +60,10 @@ test('classes are objects too', t => {
 
 test('implicit self return', t => {
   const env = new Environment()
-  env._loadClassFromSource("Thing = (name = (^'Thing1') yourself = ())")
+  const Thing = env._loadClassFromSource(
+    "Thing = (name = (^'Thing1') yourself = ())"
+  )
+  t.is(env.globals.$Thing, Thing)
   t.is(env.eval('Thing new yourself name'), 'Thing1')
 })
 
