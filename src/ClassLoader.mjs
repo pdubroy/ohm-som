@@ -116,14 +116,19 @@ export class ClassLoader {
     const jsFilename = `${filename}.js`
 
     let js
-    if (Boolean(process.env.USE_PREGENERATED_CLASSES) && fs.existsSync(jsFilename)) {
-      js = fs.readFileSync(jsFilename).toString().replace(/^;/, '') // Drop leading `;`
+    if (
+      Boolean(process.env.USE_PREGENERATED_CLASSES) &&
+      fs.existsSync(jsFilename)
+    ) {
+      js = fs
+        .readFileSync(jsFilename)
+        .toString()
+        .replace(/^;/, '') // Drop leading `;`
     } else {
       js = compileClass(source).js
 
-      if (Boolean(process.env.DEBUG_GENERATED_CLASSES)) {
+      if (process.env.DEBUG_GENERATED_CLASSES) {
         fs.writeFileSync(jsFilename, prettier.format(js))
-        const indent = new Array(this._depth).join('-')
       }
     }
 

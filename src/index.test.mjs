@@ -178,13 +178,15 @@ test('codegen: other expressions', t => {
 })
 
 test('semantics: lexicalVars', t => {
-  const root = semantics(grammar.match(`Dog = (
+  const root = semantics(
+    grammar.match(`Dog = (
     run: speed = (
       | a b |
       xxx1 do: [:c :d| | d e | ^xxx2]
     )
     bark = (xxx3)
-  )`))
+  )`)
+  )
 
   // Calculate the `lexicalVars` attribute on all nodes.
   root.lexicalVars // eslint-disable-line no-unused-expressions
