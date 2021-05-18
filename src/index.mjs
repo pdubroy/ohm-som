@@ -81,6 +81,13 @@ semantics.addAttribute(
           blockBody.lexicalVars // eslint-disable-line no-unused-expressions
         })
       },
+      NestedBlock (_, blockPatternOpt, blockContentsOpt, _1) {
+        const blockPattern = blockPatternOpt.child(0)
+        const ids = blockPattern ? blockPattern.identifiers() : []
+        return withEnv(ids, () => {
+          blockContentsOpt.lexicalVars // eslint-disable-line no-unused-expressions
+        })
+      },
       _nonterminal (children) {
         children.forEach(c => c.lexicalVars)
         return envStack[envStack.length - 1]
@@ -100,6 +107,12 @@ semantics.addOperation('identifiers()', {
     return ident.identifiers()
   },
   KeywordPattern (keywordIter, identIter) {
+    return identIter.identifiers()
+  },
+  BlockPattern (blockArguments, _) {
+    return blockArguments.identifiers()
+  },
+  BlockArguments (_, identIter) {
     return identIter.identifiers()
   },
   _nonterminal (children) {
@@ -203,7 +216,6 @@ semantics.addOperation('toJS()', {
     return exp.toJS()
   },
   NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
-    const blockPattern = blockPatternOpt.child(0)
     const arity = this.blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
     return `this._block${arity}((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
   },

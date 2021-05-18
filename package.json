@@ -23,6 +23,11 @@
     "ohm-js": "^15.5.0"
   },
   "ava": {
+    "files": [
+      "**/*.test.mjs",
+      "**/test/**/*.mjs",
+      "!**/*.som.js"
+    ],
     "ignoredByWatcher": [
       "**/*.som.js"
     ]

@@ -1,5 +1,6 @@
 import test from 'ava'
 
+import { allKeys } from './helpers.mjs'
 import { grammar, compile, semantics } from './index.mjs'
 
 function parseMethod (source) {
@@ -177,16 +178,16 @@ test('codegen: other expressions', t => {
 })
 
 test('semantics: lexicalVars', t => {
-  const r = grammar.match(`Dog = (
+  const root = semantics(grammar.match(`Dog = (
     run: speed = (
       | a b |
-      xxx1 do: [:b :c| | c d | ^xxx2]
+      xxx1 do: [:c :d| | d e | ^xxx2]
     )
     bark = (xxx3)
-  )`)
+  )`))
 
   // Calculate the `lexicalVars` attribute on all nodes.
-  semantics(r).lexicalVars // eslint-disable-line no-unused-expressions
+  root.lexicalVars // eslint-disable-line no-unused-expressions
 
   // An operation that returns the value of `lexicalVars` for the variable
   // node whose text is `str`.
@@ -214,22 +215,14 @@ test('semantics: lexicalVars', t => {
     })()
   )
 
-  const allKeys = obj => {
-    const keys = []
-    for (const k in obj) {
-      keys.push(k)
-    }
-    keys.sort((a, b) => a.localeCompare(b))
-    return keys
-  }
-
-  t.deepEqual(allKeys(semantics(r).lexicalVarsAt('xxx1')), ['a', 'b', 'speed'])
-  t.deepEqual(allKeys(semantics(r).lexicalVarsAt('xxx2')), [
+  t.deepEqual(allKeys(root.lexicalVarsAt('xxx1')), ['a', 'b', 'speed'])
+  t.deepEqual(allKeys(root.lexicalVarsAt('xxx2')), [
     'a',
     'b',
     'c',
     'd',
+    'e',
     'speed'
   ])
-  t.deepEqual(allKeys(semantics(r).lexicalVarsAt('xxx3')), [])
+  t.deepEqual(allKeys(root.lexicalVarsAt('xxx3')), [])
 })
