@@ -4,7 +4,7 @@ export default {
       return this._fn()
     },
     restart () {
-      throw new Error('not implemented')
+      // Not required
     }
   },
   'Block class': {

@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 // import prettier from 'prettier-standard'
 
+import { assert } from './assert.mjs'
 import { ClassLoader } from './ClassLoader.mjs'
 import { somClassLibPath } from './paths.mjs'
 import { ReturnValue } from './ReturnValue.mjs'
@@ -42,11 +43,11 @@ export class Environment {
   }
 
   get (key) {
-    return this.globals[key]
+    return this.globals[`$${key}`]
   }
 
   set (key, val) {
-    this.globals[key] = val
+    this.globals[`$${key}`] = val
   }
 
   // TODO: Could we actually implement message sends as regular JS method calls,
@@ -85,9 +86,12 @@ export class Environment {
     return UnknownObject.new().run()
   }
 
-  loadClass (filename, save = true) {
-    const source = fs.readFileSync(filename)
-    return this._loadClassFromSource(source)
+  loadClass (filename) {
+    const ext = path.extname(filename)
+    assert(ext === '.som', `Expected .som file, got ${ext} (${filename})`)
+    const className = path.basename(filename, ext)
+    this._classLoader.registerClass(className, filename)
+    return this._classLoader.loadClass(className)
   }
 
   _loadClassFromSource (source, save = true) {
