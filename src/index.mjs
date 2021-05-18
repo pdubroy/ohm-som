@@ -235,10 +235,10 @@ semantics.addOperation('toJS()', {
     return `this._int(${this.sourceString})`
   },
   LiteralSymbol (_, stringOrSelector) {
-    return `Symbol.for(${stringOrSelector.asString()})`
+    return `this.$Symbol._new(${stringOrSelector.asString()})`
   },
   LiteralString (str) {
-    return `${str.asString()}`
+    return `this.$String._new(${str.asString()})`
   },
   variable (pseudoVarOrIdent) {
     if (pseudoVarOrIdent._node.ctorName === 'identifier') {

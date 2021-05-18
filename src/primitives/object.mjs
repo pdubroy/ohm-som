@@ -1,3 +1,5 @@
+import { assert } from '../assert.mjs'
+
 export default {
   Object: {
     objectSize () {
@@ -46,6 +48,24 @@ export default {
 
     'instVarNamed:' (sym) {
       throw new Error('not implemented')
+    },
+
+    _isKindOf (cls) {
+      let proto = this
+      while ((proto = Object.getPrototypeOf(proto))) {
+        if (proto === cls._prototype) {
+          return true
+        }
+      }
+      return false
+    },
+    _checkIsKindOf (cls) {
+      const className = cls._name
+      assert(this._isKindOf(cls), `Not a ${className}`)
+      return this
+    },
+    _checkIsInteger () {
+      return this._checkIsKindOf(this.$Integer)
     }
   }
 }

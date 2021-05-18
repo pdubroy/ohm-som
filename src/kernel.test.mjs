@@ -7,6 +7,11 @@ const { Object, Metaclass } = createKernelClasses()
 test('kernel classes', t => {
   const nil = (Object._prototype.$nil = null)
 
+  // Fake the string constructor and make it return a native string.
+  Object._prototype.$String = {
+    _new: str => str
+  }
+
   t.is(Object.name(), 'Object')
   t.is(Object.class().name(), 'Object class')
   t.is(Object.superclass(), nil)
@@ -22,12 +27,4 @@ test('kernel classes', t => {
       .name(),
     'Metaclass'
   )
-  //  t.is(nil.class().name(), 'Nil')
-
-  //  t.is(
-  //    Set.class()
-  //      .methods()
-  //      .size(),
-  //    1
-  //  )
 })

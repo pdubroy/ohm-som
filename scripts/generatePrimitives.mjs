@@ -37,7 +37,7 @@ semantics.addOperation('primitiveMethods', {
 const inputFilename = process.argv[2]
 const matchResult = grammar.match(fs.readFileSync(inputFilename))
 const root = semantics(matchResult)
-console.log(`class Primitive${root.className()} {`)
+console.log(`${root.className()}: {`)
 root.primitiveMethods().forEach(({ isStatic, selector, params }) => {
   const prefix = isStatic ? 'static ' : ''
   console.log(`  ${prefix}'${selector}'(${params}) {

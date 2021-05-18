@@ -56,7 +56,7 @@ export default {
     // ----- Converting -----
 
     asString () {
-      return `${this._val}`
+      return this.$String._new(`${this._val}`)
     },
     as32BitSignedValue () {
       throw new Error('not implemented')

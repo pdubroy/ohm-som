@@ -4,6 +4,15 @@ import path from 'path'
 import { ClassLoader } from './ClassLoader.mjs'
 import { testDataPath } from './paths.mjs'
 
+function installFakeString (classLoader) {
+  const Object = classLoader.loadClass('Object')
+
+  // Install a fake String constructor that just returns a native string
+  Object._prototype.$String = {
+    _new: str => str
+  }
+}
+
 test('primitive methods', t => {
   const loader = new ClassLoader()
   loader.registerPrimitives({
@@ -27,6 +36,8 @@ test('primitive methods', t => {
 
 test('compiled methods', t => {
   const loader = new ClassLoader()
+  installFakeString(loader)
+
   loader.registerClass('Thing', path.join(testDataPath, 'Thing.som'))
   const Thing = loader.loadClass('Thing')
 

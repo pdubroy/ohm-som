@@ -1,14 +1,12 @@
-import { assert } from '../assert.mjs'
+import { getIntegerValue } from '../helpers.mjs'
 
 export default {
   Array: {
     'at:' (index) {
-      assert(index.class().name() === 'Integer')
-      return this._arr[index._val - 1]
+      return this._arr[getIntegerValue(index) - 1]
     },
     'at:put:' (index, value) {
-      assert(index.class().name() === 'Integer')
-      return (this._arr[index._val - 1] = value)
+      return (this._arr[getIntegerValue(index) - 1] = value)
     },
     length () {
       return this._int(this._arr.length)
@@ -19,7 +17,7 @@ export default {
       return this._newWithProps({ _arr: arr })
     },
     'new:' (length) {
-      return this._new(new Array(length.val))
+      return this._new(new Array(getIntegerValue(length)))
     }
   }
 }

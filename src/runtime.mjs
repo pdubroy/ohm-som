@@ -1,5 +1,4 @@
-// Properties beginning with `_` or `$` are not methods; everything else is.
-const isMethodName = propName => propName[0] !== '_' && propName[0] !== '$'
+import { isMethodName } from './helpers.mjs'
 
 const superProxyHandler = {
   get (target, propName, receiver) {

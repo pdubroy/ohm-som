@@ -26,6 +26,7 @@ export class Environment {
 
     // Convenience constructors.
     g._int = str => g.$Integer['fromString:'](str)
+    g._str = str => g.$String._new(str)
     g._block1 = fn => g.$Block1._new(fn)
     g._block2 = fn => g.$Block2._new(fn)
     g._block3 = fn => g.$Block3._new(fn)
