@@ -8,7 +8,7 @@
     "lint": "prettier-standard --check && standard",
     "format": "prettier-standard --format && standard --fix",
     "generate-classes": "node scripts/generateClassLib.mjs",
-    "som-test-suite": "node scripts/runSomTestSuite.mjs"
+    "som-test-suite": "node $NODE_ARGS scripts/runSomTestSuite.mjs"
   },
   "author": "Patrick Dubroy <pdubroy@gmail.com>",
   "license": "MIT",
