@@ -3,7 +3,7 @@ import prettier from 'prettier-standard'
 
 import { assert, checkNotNull } from './assert.mjs'
 import { compileClass } from './index.mjs'
-import { createKernelClasses, createClassStub } from './kernel.mjs'
+import { createKernel, createClassStub } from './kernel.mjs'
 import { Logger } from './Logger.mjs'
 import { somClassLibPath } from './paths.mjs'
 import primitives from './primitives/index.mjs'
@@ -16,7 +16,9 @@ export class ClassLoader {
     this._primitives = new Map()
     this._classMap = new Map()
     this.registerPrimitives(primitives)
-    this._initializeKernelClasses()
+    const kernel = createKernel()
+    this._initializeKernelClasses(kernel)
+    this._nil = kernel.nil
   }
 
   _logInfo (msg) {
@@ -24,11 +26,9 @@ export class ClassLoader {
     logger.info(`${indent}${msg}`)
   }
 
-  _initializeKernelClasses () {
-    const kernel = createKernelClasses()
-
+  _initializeKernelClasses (kernel) {
     // Load the compiled methods for the kernel classes.
-    for (const name of ['Object', 'Class', 'Metaclass']) {
+    for (const name of ['Object', 'Class', 'Metaclass', 'Nil']) {
       const classObj = kernel[name]
       const spec = this._getCompiledClass(`${somClassLibPath}/${name}.som`)
       this._addCompiledMethodsToClass(
@@ -158,7 +158,7 @@ export class ClassLoader {
 
   _eval (js) {
     // eslint-disable-next-line no-new-func
-    return new Function('globals', `return ${js}`)(this.globals)
+    return new Function('nil', `return ${js}`)(this._nil)
   }
 
   _addCompiledMethodsToClass (classObj, instanceSlots, classSlots) {

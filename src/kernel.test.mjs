@@ -1,12 +1,10 @@
 import test from 'ava'
 
-import { createKernelClasses } from './kernel.mjs'
+import { createKernel } from './kernel.mjs'
 
-const { Object, Metaclass } = createKernelClasses()
+const { Object, Metaclass, Nil, nil } = createKernel()
 
 test('kernel classes', t => {
-  const nil = (Object._prototype.$nil = null)
-
   // Fake the string constructor and make it return a native string.
   Object._prototype.$String = {
     _new: str => str
@@ -27,4 +25,5 @@ test('kernel classes', t => {
       .name(),
     'Metaclass'
   )
+  t.is(nil.class(), Nil)
 })

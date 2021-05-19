@@ -1,4 +1,4 @@
-import { getIntegerValue, stringValue } from '../helpers.mjs'
+import { getIntegerValue } from '../helpers.mjs'
 
 export default {
   String: {

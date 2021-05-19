@@ -18,8 +18,8 @@ export function createClassStub (proto, name, superclass, instSlots = {}) {
   return classObj
 }
 
-// Returns freshly-created kernel classes: Object, Class, Metaclass.
-export function createKernelClasses () {
+// Returns freshly-created set of kernel classes/objects.
+export function createKernel () {
   // First, create stubs.
   const SomObject = createClassStub(
     null /* -> ObjectClass (1) */,
@@ -68,10 +68,13 @@ export function createKernelClasses () {
   Object.setPrototypeOf(Metaclass, MetaclassClass._prototype)
   Metaclass.class = () => MetaclassClass
 
-  // Ensure `Object superclass` returns `nil`.
-  ObjectClass._prototype.superclass = function () {
-    return this.$nil
-  }
+  // Finally, create `Nil`, which is required for initializing other classes.
+  const NilClass = createClassStub(Metaclass, 'Nil class', ObjectClass)
+  const Nil = createClassStub(NilClass, 'Nil', SomObject)
+  const nil = Nil.new()
 
-  return { Object: SomObject, Class, Metaclass }
+  // Ensure `Object superclass` returns `nil`.
+  ObjectClass._prototype.superclass = () => nil
+
+  return { Object: SomObject, Class, Metaclass, Nil, nil }
 }

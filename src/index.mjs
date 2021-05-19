@@ -149,14 +149,14 @@ semantics.addOperation('toJS()', {
   InstanceSlots (_, identOpt, _end, methodIter) {
     const identifiers = identOpt.toJS()[0] || []
     return [
-      ...identifiers.map(id => `${id}: undefined`),
+      ...identifiers.map(id => `$${id}: nil`),
       ...methodIter.children.filter(m => !m.isPrimitive()).map(m => m.toJS())
     ].join(',')
   },
   ClassSlots (_, identOpt, _end, methodIter) {
     const identifiers = identOpt.toJS()[0] || []
     return [
-      ...identifiers.map(id => `${id}: undefined`),
+      ...identifiers.map(id => `$${id}: nil`),
       ...methodIter.children.filter(m => !m.isPrimitive()).map(m => m.toJS())
     ].join(',')
   },

@@ -15,7 +15,9 @@ classpath.forEach(dir => {
   })
 })
 
+// TODO: Actually use System to load and run the main class.
 const TestHarness = env.loadClass(
   path.join(somTestSuitePath, 'TestHarness.som')
 )
-TestHarness.new().runAllSuites()
+const args = env.get('Array')._new(['TestHarness'])
+TestHarness.new()['run:'](args)
