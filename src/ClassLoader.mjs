@@ -4,15 +4,24 @@ import prettier from 'prettier-standard'
 import { assert, checkNotNull } from './assert.mjs'
 import { compileClass } from './index.mjs'
 import { createKernelClasses, createClassStub } from './kernel.mjs'
+import { Logger } from './Logger.mjs'
 import { somClassLibPath } from './paths.mjs'
 import primitives from './primitives/index.mjs'
 
+const logger = Logger.get('classloading')
+
 export class ClassLoader {
   constructor () {
+    this._depth = -1
     this._primitives = new Map()
     this._classMap = new Map()
     this.registerPrimitives(primitives)
     this._initializeKernelClasses()
+  }
+
+  _logInfo (msg) {
+    const indent = new Array(this._depth + 1).join('  ')
+    logger.info(`${indent}${msg}`)
   }
 
   _initializeKernelClasses () {
@@ -67,15 +76,24 @@ export class ClassLoader {
       this._classMap.get(className),
       `no class map entry for '${className}'`
     )
+
     if (entry.classObj) {
-      return entry.classObj // The class is already loaded; return it.
+      return entry.classObj // Already loaded; return it.
     }
+
+    this._depth += 1
+    this._logInfo(`loadClass ${className}...`)
     assert(
       entry.filename !== undefined,
       `no known filename for class '${className}'`
     )
+
     const spec = this._getCompiledClass(entry.filename)
     entry.classObj = this._loadCompiledClass(className, spec)
+
+    this._logInfo(`✔ loaded  ${className}`)
+    this._depth -= 1
+
     return entry.classObj
   }
 
@@ -112,7 +130,6 @@ export class ClassLoader {
   }
 
   _getCompiledClass (filename) {
-    const source = fs.readFileSync(filename)
     const jsFilename = `${filename}.js`
 
     let js
@@ -120,14 +137,20 @@ export class ClassLoader {
       Boolean(process.env.USE_PREGENERATED_CLASSES) &&
       fs.existsSync(jsFilename)
     ) {
+      this._logInfo(`Reading pre-compiled class from ${jsFilename}`)
+
       js = fs
         .readFileSync(jsFilename)
         .toString()
         .replace(/^;/, '') // Drop leading `;`
     } else {
+      this._logInfo(`Compiling ${filename}`)
+
+      const source = fs.readFileSync(filename)
       js = compileClass(source).js
 
       if (process.env.DEBUG_GENERATED_CLASSES) {
+        this._logInfo(`Writing pre-compiled class to ${jsFilename}`)
         fs.writeFileSync(jsFilename, prettier.format(js))
       }
     }

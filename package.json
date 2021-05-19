@@ -20,6 +20,7 @@
     "yargs": "^16.2.0"
   },
   "dependencies": {
+    "js-logger": "^1.6.1",
     "ohm-js": "^15.5.0"
   },
   "ava": {
