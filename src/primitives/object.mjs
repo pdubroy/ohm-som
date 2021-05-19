@@ -7,7 +7,7 @@ export default {
     },
 
     '==' (other) {
-      return this === other
+      return this._bool(this === other)
     },
 
     hashcode () {

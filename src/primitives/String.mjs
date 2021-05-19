@@ -1,9 +1,9 @@
-import { getIntegerValue } from '../helpers.mjs'
+import { getIntegerValue, stringValue } from '../helpers.mjs'
 
 export default {
   String: {
     'concatenate:' (argument) {
-      throw new Error('not implemented')
+      return this.$String._new(this._str + stringValue(argument.asString()))
     },
     asSymbol () {
       throw new Error('not implemented')
@@ -24,9 +24,9 @@ export default {
       throw new Error('not implemented')
     },
     '=' (argument) {
-      return argument._isKindOf(this.$String)
-        ? this._bool(argument._str === this._str)
-        : this.$false
+      return this._bool(
+        argument._isKindOf(this.$String) && argument._str === this._str
+      )
     },
     'primSubstringFrom:to:' (start, end) {
       const startVal = getIntegerValue(start) - 1

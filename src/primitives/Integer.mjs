@@ -1,18 +1,20 @@
+import { getIntegerValue } from '../helpers.mjs'
+
 export default {
   Integer: {
     // ----- Arithmetic -----
 
-    '+' ({ _val }) {
-      return this.class()._new(this._val + _val)
+    '+' (other) {
+      return this.class()._new(this._val + getIntegerValue(other))
     },
-    '-' ({ _val }) {
-      return this.class()._new(this._val - _val)
+    '-' (other) {
+      return this.class()._new(this._val - getIntegerValue(other))
     },
-    '*' ({ _val }) {
-      return this.class()._new(this._val * _val)
+    '*' (other) {
+      return this.class()._new(this._val * getIntegerValue(other))
     },
-    '/' ({ _val }) {
-      return this.class()._new(this._val / _val)
+    '/' (other) {
+      return this.class()._new(this._val / getIntegerValue(other))
     },
     '//' (argument) {
       throw new Error('not implemented')
@@ -46,11 +48,15 @@ export default {
 
     // ----- Comparing -----
 
-    '=' ({ _val }) {
-      return this._val === _val ? this.$true : this.$false
+    '=' (other) {
+      return this._bool(
+        other._isKindOf(this.$Integer) && this._val === getIntegerValue(other)
+      )
     },
-    '<' ({ _val }) {
-      return this._val < _val ? this.$true : this.$false
+    '<' (other) {
+      return this._bool(
+        other._isKindOf(this.$Integer) && this._val < getIntegerValue(other)
+      )
     },
 
     // ----- Converting -----
