@@ -1,4 +1,5 @@
 import { assert } from '../assert.mjs'
+import { stringValue } from '../helpers.mjs'
 
 export default {
   Object: {
@@ -23,7 +24,7 @@ export default {
     },
 
     'perform:' (aSymbol) {
-      throw new Error('not implemented')
+      return this[stringValue(aSymbol)]()
     },
 
     'perform:withArguments:' (aSymbol, args) {
