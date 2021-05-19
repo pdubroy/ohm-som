@@ -9,7 +9,7 @@ export default {
   },
   'Block class': {
     _new (fn) {
-      return this._newWithProps({ _fn: fn })
+      return this._basicNew({ _fn: fn })
     }
   },
   Block1: {

@@ -1,3 +1,5 @@
+import { stringValue } from '../helpers.mjs'
+
 export default {
   System: {
     'global:' (name) {
@@ -16,10 +18,10 @@ export default {
       throw new Error('not implemented')
     },
     'printString:' (string) {
-      throw new Error('not implemented')
+      process.stdout.write(stringValue(string))
     },
     printNewline () {
-      throw new Error('not implemented')
+      console.log()
     },
     time () {
       throw new Error('not implemented')

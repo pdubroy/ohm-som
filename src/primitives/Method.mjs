@@ -19,7 +19,7 @@ export default {
         nativeMethod,
         `No such method '${signature}' on ${classObj.name()}`
       )
-      return this._newWithProps({
+      return this._basicNew({
         _signature: signature,
         _holder: classObj,
         _nativeMethod: nativeMethod

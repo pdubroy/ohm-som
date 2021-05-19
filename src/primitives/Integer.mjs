@@ -68,7 +68,7 @@ export default {
 
   'Integer class': {
     _new (val) {
-      return this._newWithProps({ _val: val })
+      return this._basicNew({ _val: val })
     },
     'fromString:' (aString) {
       return this._new(parseInt(aString, 10))

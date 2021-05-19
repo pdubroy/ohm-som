@@ -8,7 +8,7 @@ export default {
     superclass () {
       return Object.getPrototypeOf(this).class()
     },
-    _newWithProps (props) {
+    _basicNew (props) {
       const self = Object.create(this._prototype)
       return Object.assign(self, props)
     },

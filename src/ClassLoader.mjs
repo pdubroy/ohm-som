@@ -99,8 +99,7 @@ export class ClassLoader {
 
   loadClassFromSource (source, save = true) {
     const { className, js } = compileClass(source)
-    // eslint-disable-next-line no-new-func
-    const spec = new Function(`return ${js}`)()
+    const spec = this._eval(js)
     const classObj = this._loadCompiledClass(className, spec)
     if (save) {
       this._classMap.set(className, { classObj })
@@ -154,9 +153,12 @@ export class ClassLoader {
         fs.writeFileSync(jsFilename, prettier.format(js))
       }
     }
+    return this._eval(js)
+  }
 
+  _eval (js) {
     // eslint-disable-next-line no-new-func
-    return new Function(`return ${js}`)()
+    return new Function('globals', `return ${js}`)(this.globals)
   }
 
   _addCompiledMethodsToClass (classObj, instanceSlots, classSlots) {

@@ -23,10 +23,12 @@ export class Environment {
     g.$true = g.$True.new()
     g.$false = g.$False.new()
     g.$nil = g.$Nil.new()
+    g.$system = g.$System._basicNew()
 
     // Convenience constructors.
     g._int = str => g.$Integer['fromString:'](str)
     g._str = str => g.$String._new(str)
+    g._bool = val => (val ? g.$true : g.$false)
     g._block1 = fn => g.$Block1._new(fn)
     g._block2 = fn => g.$Block2._new(fn)
     g._block3 = fn => g.$Block3._new(fn)

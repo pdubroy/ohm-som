@@ -14,7 +14,7 @@ export default {
   },
   'Array class': {
     _new (arr = []) {
-      return this._newWithProps({ _arr: arr })
+      return this._basicNew({ _arr: arr })
     },
     'new:' (length) {
       return this._new(new Array(getIntegerValue(length)))

@@ -6,7 +6,7 @@ export default {
   },
   'Symbol class': {
     _new (str) {
-      return this._newWithProps({ _str: str })
+      return this._basicNew({ _str: str })
     }
   }
 }
