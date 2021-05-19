@@ -4,7 +4,13 @@ export default {
       return this._fn()
     },
     restart () {
-      // Not required
+      throw new Error('Not supported: Block>>restart')
+    },
+    '_OVERRIDE_whileTrue:' (block) {
+      while (this.value() === this.$true) {
+        block.value()
+      }
+      return this.$nil
     }
   },
   'Block class': {

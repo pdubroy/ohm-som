@@ -14,9 +14,6 @@ export class Environment {
 
     const Object = this._classLoader.loadClass('Object')
     const g = (this.globals = Object._prototype)
-    g.$Object = Object
-    g.$Class = this._classLoader.loadClass('Class')
-    g.$Metaclass = this._classLoader.loadClass('Metaclass')
 
     this._registerStdLibClasses()
 
@@ -34,6 +31,9 @@ export class Environment {
     g._block3 = fn => g.$Block3._new(fn)
 
     g._super = createSuperProxy
+
+    g.$Block._prototype['whileTrue:'] =
+      g.$Block._prototype['_OVERRIDE_whileTrue:']
   }
 
   _registerStdLibClasses () {
