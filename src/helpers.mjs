@@ -1,3 +1,5 @@
+import { assert } from './assert.mjs'
+
 export function allKeys (obj) {
   const keys = []
   for (const k in obj) {
@@ -17,4 +19,12 @@ export function getIntegerValue (obj) {
 
 export function stringValue (obj) {
   return obj._checkIsKindOf(obj.$String)._str
+}
+
+export function numberValue (obj) {
+  assert(
+    obj._isKindOf(obj.$Integer) || obj._isKindOf(obj.$Double),
+    `Expected Integer or Double, got ${stringValue(obj.class().name())}`
+  )
+  return obj._val
 }

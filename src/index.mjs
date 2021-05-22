@@ -180,7 +180,7 @@ semantics.addOperation(
         const { ctx } = this.args
         assert(
           !this.isPrimitive(),
-          'toJS() not implemented on primtive methods'
+          'toJS() not implemented on primitive methods'
         )
 
         // Calculate the `lexicalVars` attribute on all nodes.
@@ -245,10 +245,10 @@ semantics.addOperation(
           .join(',')}])`
       },
       LiteralNumber_double (_, double) {
-        return `${this.sourceString}`
+        return `this.$Double._new(${this.sourceString})`
       },
       LiteralNumber_int (_, integer) {
-        return `this._int(${this.sourceString})`
+        return `this.$Integer._new(${this.sourceString})`
       },
       LiteralSymbol (_, stringOrSelector) {
         return `this.$Symbol._new(${stringOrSelector.asString()})`
