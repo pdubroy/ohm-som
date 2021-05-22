@@ -63,6 +63,7 @@ TestHarness = (
 
       self tests do: [ :test |
         | runner |
+        test name println.
         runner := TestRunner new.
         runner initializeOn: test.
         runner runAllTests.
