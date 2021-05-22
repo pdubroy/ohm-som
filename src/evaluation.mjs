@@ -82,11 +82,11 @@ export class Environment {
   }
 
   eval (source) {
-    const UnknownObject = this._loadClassFromSource(
-      `UnknownObject = (run = (^${source}))`,
+    const Snippet = this._loadClassFromSource(
+      `Snippet = (doIt = (^[${source}] value))`,
       false
     )
-    return UnknownObject.new().run()
+    return Snippet.new().doIt()
   }
 
   loadClass (filename) {

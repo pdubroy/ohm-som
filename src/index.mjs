@@ -363,21 +363,6 @@ semantics.addOperation('params(ctx)', {
   }
 })
 
-semantics.addOperation('hasPrimitiveMethods()', {
-  _nonterminal (children) {
-    return children.some(c => c.hasPrimitiveMethods())
-  },
-  _iter (children) {
-    return children.some(c => c.hasPrimitiveMethods())
-  },
-  Method (pattern, _, primitiveOrMethodBlock) {
-    return primitiveOrMethodBlock._node.ctorName === 'primitive'
-  },
-  _terminal () {
-    return false
-  }
-})
-
 export function compileForTesting (source, startRule = undefined) {
   const result = grammar.match(source, startRule)
   return semantics(result).toJS({ isInsideBlock: false })
@@ -393,8 +378,6 @@ export function compileClass (source, env) {
   const ctx = { isInsideBlock: false }
   return {
     className: root.className(),
-    superclassName: root.superclassName(),
-    js: root.toJS(ctx),
-    hasPrimitiveMethods: root.hasPrimitiveMethods()
+    js: root.toJS(ctx)
   }
 }
