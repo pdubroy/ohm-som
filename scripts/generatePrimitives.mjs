@@ -27,7 +27,7 @@ semantics.addOperation('primitiveMethods', {
     if (body._node.ctorName === 'primitive') {
       return {
         selector: pattern.selector(),
-        params: pattern.params()
+        params: pattern.params({})
       }
     }
     return []
@@ -37,11 +37,12 @@ semantics.addOperation('primitiveMethods', {
 const inputFilename = process.argv[2]
 const matchResult = grammar.match(fs.readFileSync(inputFilename))
 const root = semantics(matchResult)
-console.log(`${root.className()}: {`)
+const className = root.className()
+console.log(`${className}: {`)
 root.primitiveMethods().forEach(({ isStatic, selector, params }) => {
   const prefix = isStatic ? 'static ' : ''
   console.log(`  ${prefix}'${selector}'(${params}) {
-    throw new Error('not implemented')
-  }`)
+    throw new Error('not implemented: ${className}>>${selector}')
+  },`)
 })
 console.log('}')
