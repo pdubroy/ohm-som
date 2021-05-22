@@ -1,7 +1,7 @@
 import test from 'ava'
 
 import { allKeys } from './helpers.mjs'
-import { grammar, compile, semantics } from './index.mjs'
+import { grammar, compileForTesting as compile, semantics } from './index.mjs'
 
 function parseMethod (source) {
   const result = grammar.match(source, 'Method')

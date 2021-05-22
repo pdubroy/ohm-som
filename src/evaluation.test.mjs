@@ -30,6 +30,7 @@ test('full eval with real Integer class', t => {
   t.is(stringValue(doIt('(3 + (1 negated - 2)) asString')), '0')
 
   t.is(stringValue(doIt("(Integer fromString: '42') asString")), '42')
+  t.is(stringValue(doIt('(2 < 1) asString')), 'false')
 })
 
 test('evaluation with boolean classes', t => {
@@ -70,12 +71,38 @@ test('classes are objects too', t => {
 test('implicit self return', t => {
   const env = new Environment()
   const Thing = env._loadClassFromSource(
-    "Thing = (name = (^'Thing1') yourself = ())"
+    'Thing = (yourself = () yourself2 = (2))'
   )
   t.is(env.globals.$Thing, Thing)
-  t.is(stringValue(env.eval('Thing new yourself name')), 'Thing1')
+  t.is(env.eval('Thing new yourself class'), Thing)
+  t.is(env.eval('Thing new yourself2 class'), Thing)
 })
 
-test.failing('strings are wrapped', t => {
-  t.is(doIt('(True ifNil: [3]) asString'), 'True')
+test('Integer>>to:do:', t => {
+  const env = new Environment()
+  let count = 0
+  env._classLoader.registerPrimitives({
+    Test: {
+      incrementCount () {
+        count += 1
+        return this.$nil
+      }
+    }
+  })
+  const Test = env._loadClassFromSource(
+    `Test = (
+      run = (1 to: 5 do: [ :i | self incrementCount])
+      run2 = (1 to: 1 do: [ :i | self incrementCount])
+      run3 = (1 to: 0 do: [ :i | self incrementCount])
+    )`
+  )
+  const aTest = Test.new()
+  aTest.run()
+  t.is(count, 5)
+
+  aTest.run2()
+  t.is(count, 6)
+
+  aTest.run3()
+  t.is(count, 6)
 })

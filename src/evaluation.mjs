@@ -83,7 +83,7 @@ export class Environment {
 
   eval (source) {
     const UnknownObject = this._loadClassFromSource(
-      `UnknownObject = (run = (${source}))`,
+      `UnknownObject = (run = (^${source}))`,
       false
     )
     return UnknownObject.new().run()

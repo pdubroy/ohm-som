@@ -3,13 +3,13 @@ import fs from 'fs'
 import path from 'path'
 import walkSync from 'walk-sync'
 
-import { compile } from '../src/index.mjs'
+import { compileClass } from '../src/index.mjs'
 import { somTestSuitePath } from '../src/paths.mjs'
 
 // An AVA "macro function" that tests that the SOM source file at `filename` can be parsed.
 function testSourceFile (t, filename) {
   const source = fs.readFileSync(path.join(somTestSuitePath, filename))
-  t.notThrows(() => compile(source))
+  t.notThrows(() => compileClass(source))
 }
 
 // Use the filename as the title for each test case.

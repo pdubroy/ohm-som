@@ -126,150 +126,169 @@ semantics.addOperation('identifiers()', {
   }
 })
 
-semantics.addOperation('toJS()', {
-  // Returns a JavaScript *expression* for a Smalltalk class definition.
-  Classdef (id, _, superclass, instSlots, _sep, classSlotsOpt, _end) {
-    // Calculate the `lexicalVars` attribute on all nodes.
-    this.lexicalVars // eslint-disable-line no-unused-expressions
-
-    const className = id.toJS()
-    const superclassName = superclass.toJS() || 'Object'
-    return (
-      `({className:'${className}',superclassName:'${superclassName}'` +
-      `,instanceSlots:{${instSlots.toJS()}},classSlots:{${classSlotsOpt.toJS()}}})`
-    )
-  },
-  Superclass (ident, _) {
-    return ident.toJS()
-  },
-  identifier (first, rest) {
-    const id = this.sourceString
-    return jsReservedWords.includes(id) ? `_${id}` : id
-  },
-  InstanceSlots (_, identOpt, _end, methodIter) {
-    const identifiers = identOpt.toJS()[0] || []
-    return [
-      ...identifiers.map(id => `$${id}: nil`),
-      ...methodIter.children.filter(m => !m.isPrimitive()).map(m => m.toJS())
-    ].join(',')
-  },
-  ClassSlots (_, identOpt, _end, methodIter) {
-    const identifiers = identOpt.toJS()[0] || []
-    return [
-      ...identifiers.map(id => `$${id}: nil`),
-      ...methodIter.children.filter(m => !m.isPrimitive()).map(m => m.toJS())
-    ].join(',')
-  },
-  Method (pattern, _eq, body) {
-    assert(!this.isPrimitive(), 'toJS() not implemented on primtive methods')
-
-    // Calculate the `lexicalVars` attribute on all nodes.
-    this.lexicalVars // eslint-disable-line no-unused-expressions
-
-    const selector = pattern.selector()
-    const paramList = pattern.params().join(', ')
-    return `'${selector}'(${paramList}){${body.toJS()}}`
-  },
-  MethodBlock (_open, blockContentsOpt, _close) {
-    const body = blockContentsOpt.toJS().join('')
-    return `const _rv={};try{${body}}catch(e){if(e===_rv)return e.v;throw e}return this`
-  },
-  BlockContents (_or, localDefsOpt, _, blockBody) {
-    return localDefsOpt.toJS().join('') + blockBody.toJS()
-  },
-  LocalDefs (identifiers) {
-    return `let ${identifiers.toJS().join(',')};`
-  },
-  BlockBody_return (_, result) {
-    return `_rv.v=${result.toJS()};throw _rv`
-  },
-  BlockBody_rec (exp, _, blockBodyOptOpt) {
-    const head = exp.toJS()
-    const tail = blockBodyOptOpt.toJS()[0]
-    if (tail === undefined) {
-      return `return ${head}`
+semantics.addOperation(
+  'toJS(ctx)',
+  (() => {
+    function handleInstanceOrClassSlots (_, identOpt, _end, methodIter) {
+      const { ctx } = this.args
+      const identifiers = identOpt.toJS(ctx)[0] || []
+      return [
+        ...identifiers.map(id => `$${id}: nil`),
+        ...methodIter.children
+          .filter(m => !m.isPrimitive())
+          .map(m => m.toJS(ctx))
+      ].join(',')
     }
-    return `${head};${tail}`
-  },
-  Expression_assignment (ident, _, exp) {
-    return `${ident.toJS()}=${exp.toJS()}`
-  },
-  KeywordExpression_rec (exp, message) {
-    const selector = message.selector()
-    const args = getMessageArgs(message)
-    return `${exp.toJS()}['${selector}'](${args})`
-  },
-  BinaryExpression_rec (exp, message) {
-    const selector = message.selector()
-    const args = getMessageArgs(message)
-    return `${exp.toJS()}['${selector}'](${args})`
-  },
-  UnaryExpression_rec (exp, message) {
-    const selector = message.selector()
-    const args = getMessageArgs(message)
-    return `${exp.toJS()}.${selector}(${args})`
-  },
-  Result (exp, _) {
-    return exp.toJS()
-  },
-  NestedTerm (_open, exp, _close) {
-    return exp.toJS()
-  },
-  NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
-    const arity = this.blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
-    return `this._block${arity}((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
-  },
-  BlockPattern (blockArguments, _) {
-    return blockArguments.toJS()
-  },
-  BlockArguments (_, identIter) {
-    return identIter.toJS().join(',')
-  },
-  LiteralArray (_, _open, literalIter, _close) {
-    return `[${literalIter.toJS().join(',')}]`
-  },
-  LiteralNumber_double (_, double) {
-    return `${this.sourceString}`
-  },
-  LiteralNumber_int (_, integer) {
-    return `this._int(${this.sourceString})`
-  },
-  LiteralSymbol (_, stringOrSelector) {
-    return `this.$Symbol._new(${stringOrSelector.asString()})`
-  },
-  LiteralString (str) {
-    return `this.$String._new(${str.asString()})`
-  },
-  variable (pseudoVarOrIdent) {
-    if (pseudoVarOrIdent._node.ctorName === 'identifier') {
-      const id = pseudoVarOrIdent.toJS()
-      return id in this.lexicalVars ? id : `this.$${id}`
-    }
-    return pseudoVarOrIdent.toJS()
-  },
-  self (_) {
-    return 'this'
-  },
-  super (_) {
-    return 'this._super(this)'
-  },
-  nil (_) {
-    return 'this.$nil'
-  },
-  true (_) {
-    return 'this.$true'
-  },
-  false (_) {
-    return 'this.$false'
-  }
-})
 
-function getMessageArgs (message) {
+    function handleMessageSendExpression (exp, message) {
+      const { ctx } = this.args
+      const selector = message.selector()
+      const args = getMessageArgs(message, ctx)
+      if (args.length === 0) {
+        // Unary messages are valid JS identifiers, so we can use dot notation.
+        return `${exp.toJS(ctx)}.${selector}(${args})`
+      }
+      return `${exp.toJS(ctx)}['${selector}'](${args})`
+    }
+
+    return {
+      // Returns a JavaScript *expression* for a Smalltalk class definition.
+      Classdef (id, _, superclass, instSlots, _sep, classSlotsOpt, _end) {
+        // Calculate the `lexicalVars` attribute on all nodes.
+        this.lexicalVars // eslint-disable-line no-unused-expressions
+        const { ctx } = this.args
+
+        const className = id.toJS(ctx)
+        const superclassName = superclass.toJS(ctx) || 'Object'
+        return (
+          `({className:'${className}',superclassName:'${superclassName}'` +
+          `,instanceSlots:{${instSlots.toJS(
+            ctx
+          )}},classSlots:{${classSlotsOpt.toJS(ctx)}}})`
+        )
+      },
+      Superclass (ident, _) {
+        return ident.toJS(this.args.ctx)
+      },
+      identifier (first, rest) {
+        const id = this.sourceString
+        return jsReservedWords.includes(id) ? `_${id}` : id
+      },
+      InstanceSlots: handleInstanceOrClassSlots,
+      ClassSlots: handleInstanceOrClassSlots,
+      Method (pattern, _eq, body) {
+        const { ctx } = this.args
+        assert(
+          !this.isPrimitive(),
+          'toJS() not implemented on primtive methods'
+        )
+
+        // Calculate the `lexicalVars` attribute on all nodes.
+        this.lexicalVars // eslint-disable-line no-unused-expressions
+
+        const selector = pattern.selector()
+        const paramList = pattern.params(ctx).join(', ')
+        return `'${selector}'(${paramList}){${body.toJS(ctx)}}`
+      },
+      MethodBlock (_open, blockContentsOpt, _close) {
+        const body = blockContentsOpt.toJS(this.args.ctx).join('')
+        return `const _rv={};try{${body}}catch(e){if(e===_rv)return e.v;throw e}return this`
+      },
+      BlockContents (_or, localDefsOpt, _, blockBody) {
+        const { ctx } = this.args
+        return localDefsOpt.toJS(ctx).join('') + blockBody.toJS(ctx)
+      },
+      LocalDefs (identifiers) {
+        return `let ${identifiers.toJS(this.args.ctx).join(',')};`
+      },
+      BlockBody_return (_, result) {
+        return `_rv.v=${result.toJS(this.args.ctx)};throw _rv`
+      },
+      BlockBody_rec (exp, _, blockBodyOptOpt) {
+        const { ctx } = this.args
+        const head = exp.toJS(ctx)
+        const tail = blockBodyOptOpt.toJS(ctx)[0]
+        if (tail === undefined) {
+          return ctx.isInsideBlock ? `return ${head}` : head
+        }
+        return `${head};${tail}`
+      },
+      Expression_assignment (ident, _, exp) {
+        const { ctx } = this.args
+        return `${ident.toJS(ctx)}=${exp.toJS(ctx)}`
+      },
+      KeywordExpression_rec: handleMessageSendExpression,
+      BinaryExpression_rec: handleMessageSendExpression,
+      UnaryExpression_rec: handleMessageSendExpression,
+      Result (exp, _) {
+        return exp.toJS(this.args.ctx)
+      },
+      NestedTerm (_open, exp, _close) {
+        return exp.toJS(this.args.ctx)
+      },
+      NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
+        const ctx = { ...this.args.ctx, isInsideBlock: true }
+        const arity = this.blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
+        return `this._block${arity}((${blockPatternOpt.toJS(
+          ctx
+        )})=>{${blockContentsOpt.toJS(ctx)}})`
+      },
+      BlockPattern (blockArguments, _) {
+        return blockArguments.toJS(this.args.ctx)
+      },
+      BlockArguments (_, identIter) {
+        return identIter.toJS(this.args.ctx).join(',')
+      },
+      LiteralArray (_, _open, literalIter, _close) {
+        return `this.$Array._new([${literalIter
+          .toJS(this.args.ctx)
+          .join(',')}])`
+      },
+      LiteralNumber_double (_, double) {
+        return `${this.sourceString}`
+      },
+      LiteralNumber_int (_, integer) {
+        return `this._int(${this.sourceString})`
+      },
+      LiteralSymbol (_, stringOrSelector) {
+        return `this.$Symbol._new(${stringOrSelector.asString()})`
+      },
+      LiteralString (str) {
+        return `this.$String._new(${str.asString()})`
+      },
+      variable (pseudoVarOrIdent) {
+        const { ctx } = this.args
+        if (pseudoVarOrIdent._node.ctorName === 'identifier') {
+          const id = pseudoVarOrIdent.toJS(ctx)
+          return id in this.lexicalVars ? id : `this.$${id}`
+        }
+        return pseudoVarOrIdent.toJS(ctx)
+      },
+      self (_) {
+        return 'this'
+      },
+      super (_) {
+        return 'this._super(this)'
+      },
+      nil (_) {
+        return 'this.$nil'
+      },
+      true (_) {
+        return 'this.$true'
+      },
+      false (_) {
+        return 'this.$false'
+      }
+    }
+  })()
+)
+
+function getMessageArgs (message, ctx) {
   const { ctorName } = message._node
   switch (ctorName) {
     case 'KeywordMessage':
     case 'BinaryMessage':
-      return message.child(1).toJS()
+      return message.child(1).toJS(ctx)
     case 'UnaryMessage':
       return []
     default:
@@ -332,15 +351,15 @@ semantics.addOperation('asString', {
   }
 })
 
-semantics.addOperation('params', {
+semantics.addOperation('params(ctx)', {
   UnaryPattern (_) {
     return []
   },
   BinaryPattern (_, param) {
-    return [param.toJS()]
+    return [param.toJS(this.args.ctx)]
   },
   KeywordPattern (_, params) {
-    return params.toJS()
+    return params.toJS(this.args.ctx)
   }
 })
 
@@ -359,9 +378,9 @@ semantics.addOperation('hasPrimitiveMethods()', {
   }
 })
 
-export function compile (source, startRule = undefined) {
+export function compileForTesting (source, startRule = undefined) {
   const result = grammar.match(source, startRule)
-  return semantics(result).toJS()
+  return semantics(result).toJS({ isInsideBlock: false })
 }
 
 export function compileClass (source, env) {
@@ -371,10 +390,11 @@ export function compileClass (source, env) {
   }
   // TODO: Use `env` to ensure there are no undefined references.
   const root = semantics(result)
+  const ctx = { isInsideBlock: false }
   return {
     className: root.className(),
     superclassName: root.superclassName(),
-    js: root.toJS(),
+    js: root.toJS(ctx),
     hasPrimitiveMethods: root.hasPrimitiveMethods()
   }
 }
