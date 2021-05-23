@@ -1,4 +1,12 @@
-import { numberValue, stringValue } from '../helpers.mjs'
+import { integerValue, numberValue, stringValue } from '../helpers.mjs'
+
+// From https://2ality.com/2012/02/js-integers.html (danke @rauschma)
+const modulo = (a, b) => a - Math.floor(a / b) * b
+const toUint32 = x => modulo(x - (x % 1), Math.pow(2, 32))
+const toInt32 = x => {
+  const uint32 = toUint32(x)
+  return uint32 >= Math.pow(2, 31) ? uint32 - Math.pow(2, 32) : uint32
+}
 
 export default {
   Integer: {
@@ -25,37 +33,35 @@ export default {
       // Same as Double
       return this.$Double._new(this._val / numberValue(argument))
     },
-    // modulo with sign of divisor
+    // modulo
     '%' (divisor) {
       const cls = divisor._isInteger() ? this.$Integer : this.$Double
-      const divisorVal = numberValue(divisor)
-      return cls._new(
-        (Math.abs(this._val) % Math.abs(divisorVal)) * Math.sign(divisorVal)
-      )
+      return cls._new(modulo(this._val, numberValue(divisor)))
     },
-    // modulo with sign of dividend
+    // remainder
     'rem:' (divisor) {
       const cls = divisor._isInteger() ? this.$Integer : this.$Double
-      const divisorVal = numberValue(divisor)
-      return cls._new(
-        (Math.abs(this._val) % Math.abs(divisorVal)) * Math.sign(divisorVal)
-      )
+      return cls._new(this._val % numberValue(divisor))
     },
     '&' (argument) {
-      throw new Error('not implemented: Integer>>&')
+      return this.$Integer._new(this._val & integerValue(argument))
     },
     '<<' (argument) {
-      throw new Error('not implemented: Integer>><<')
+      // Avoid using the native `<<` operator, because that converts to int32.
+      return this.$Integer._new(this._val * Math.pow(2, integerValue(argument)))
     },
     '>>>' (argument) {
-      throw new Error('not implemented: Integer>>>>>')
+      return this.$Integer._new(this._val >>> integerValue(argument))
     },
     'bitXor:' (argument) {
-      throw new Error('not implemented: Integer>>bitXor:')
+      return this.$Integer._new(this._val ^ integerValue(argument))
     },
     sqrt () {
-      // Same as Double
-      return this.$Double._new(Math.sqrt(this._val))
+      // Almost the same as Double, but uses Integer if possible.
+      const val = Math.sqrt(this._val)
+      return Number.isInteger(val)
+        ? this.$Integer._new(val)
+        : this.$Double._new(val)
     },
 
     // ----- Random numbers -----
@@ -71,6 +77,12 @@ export default {
           this._val === numberValue(other)
       )
     },
+    // Integers are always compared by value (not reference) equality.
+    // Note that this is not actually specified as a primitive in Integer.som.
+    // See https://github.com/SOM-st/SOM/pull/75
+    '==' (other) {
+      return this['='](other)
+    },
     '<' (other) {
       return this._bool(
         (other._isInteger() || other._isDouble()) &&
@@ -84,10 +96,10 @@ export default {
       return this.$String._new(`${this._val}`)
     },
     as32BitSignedValue () {
-      throw new Error('not implemented')
+      return this.$Integer._new(toInt32(this._val))
     },
     as32BitUnsignedValue () {
-      throw new Error('not implemented')
+      return this.$Integer._new(toUint32(this._val))
     },
 
     // ----- ohm-som additions -----
