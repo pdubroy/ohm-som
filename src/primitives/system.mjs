@@ -30,7 +30,7 @@ export default {
       throw new Error('not implemented')
     },
     fullGC () {
-      throw new Error('not implemented')
+      return this
     }
   }
 }

@@ -20,6 +20,7 @@
     "yargs": "^16.2.0"
   },
   "dependencies": {
+    "fnv1a": "^1.0.1",
     "js-logger": "^1.6.1",
     "ohm-js": "^15.5.0"
   },

@@ -1,3 +1,5 @@
+import fnv1a from 'fnv1a'
+
 import { assert } from '../assert.mjs'
 import { stringValue } from '../helpers.mjs'
 
@@ -12,7 +14,10 @@ export default {
     },
 
     hashcode () {
-      throw new Error('not implemented')
+      if (this._hashcode === undefined) {
+        this._hashcode = fnv1a(new Date().toISOString())
+      }
+      return this.$Integer._new(this._hashcode)
     },
 
     inspect () {

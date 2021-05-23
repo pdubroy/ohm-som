@@ -1,12 +1,12 @@
-import { numberValue } from '../helpers.mjs'
+import { integerValue } from '../helpers.mjs'
 
 export default {
   Array: {
     'at:' (index) {
-      return this._arr[numberValue(index) - 1]
+      return this._arr[integerValue(index) - 1]
     },
     'at:put:' (index, value) {
-      return (this._arr[numberValue(index) - 1] = value)
+      return (this._arr[integerValue(index) - 1] = value)
     },
     length () {
       return this.$Integer._new(this._arr.length)
@@ -17,7 +17,12 @@ export default {
       return this._basicNew({ _arr: arr })
     },
     'new:' (length) {
-      return this._new(new Array(numberValue(length)))
+      const arr = []
+      const primitiveLength = integerValue(length)
+      for (let i = 0; i < primitiveLength; i++) {
+        arr.push(this.$nil)
+      }
+      return this._new(arr)
     }
   }
 }

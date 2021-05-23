@@ -1,3 +1,5 @@
+import fnv1a from 'fnv1a'
+
 import { integerValue, stringValue } from '../helpers.mjs'
 
 export default {
@@ -9,7 +11,10 @@ export default {
       return this.$Symbol._new(this._str)
     },
     hashcode () {
-      throw new Error('not implemented')
+      if (this._hashcode === undefined) {
+        this._hashcode = fnv1a(this._str)
+      }
+      return this.$Integer._new(this._hashcode)
     },
     length () {
       return this.$Integer._new(this._str.length)

@@ -16,13 +16,14 @@ export default {
       const cls = other._isInteger() ? this.$Integer : this.$Double
       return cls._new(this._val * numberValue(other))
     },
+    // Integer division
     '/' (other) {
-      const cls = other._isInteger() ? this.$Integer : this.$Double
-      return cls._new(this._val / numberValue(other))
+      return this.$Integer._new(Math.floor(this._val / numberValue(other)))
     },
+    // Double division
     '//' (argument) {
       // Same as Double
-      return this.$Double._new(Math.floor(this._val / numberValue(argument)))
+      return this.$Double._new(this._val / numberValue(argument))
     },
     // modulo with sign of divisor
     '%' (divisor) {

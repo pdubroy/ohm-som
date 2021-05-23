@@ -12,7 +12,7 @@ export default {
       return this.$Double._new(this._val * numberValue(argument))
     },
     '//' (argument) {
-      return this.$Double._new(Math.floor(this._val / numberValue(argument)))
+      return this.$Double._new(this._val / numberValue(argument))
     },
     '%' (argument) {
       return this.$Double._new(this._val % numberValue(argument))
@@ -39,7 +39,7 @@ export default {
       return this._bool(this._val < numberValue(argument))
     },
     asString () {
-      return this._str(`${this._val}`)
+      return this.$String._new(`${this._val}`)
     },
 
     // ----- ohm-som additions -----
