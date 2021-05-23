@@ -1,7 +1,7 @@
 import fnv1a from 'fnv1a'
 
 import { assert } from '../assert.mjs'
-import { stringValue } from '../helpers.mjs'
+import { integerValue, arrayValue, stringValue } from '../helpers.mjs'
 
 export default {
   Object: {
@@ -28,32 +28,36 @@ export default {
       throw new Error('not implemented')
     },
 
-    'perform:' (aSymbol) {
-      return this[stringValue(aSymbol)]()
+    'perform:' (selector) {
+      return this[stringValue(selector)]()
     },
 
-    'perform:withArguments:' (aSymbol, args) {
-      throw new Error('not implemented')
+    'perform:withArguments:' (selector, args) {
+      return this[stringValue(selector)](...arrayValue(args))
     },
 
-    'perform:inSuperclass:' (aSymbol, cls) {
-      throw new Error('not implemented')
+    'perform:inSuperclass:' (selector, cls) {
+      assert(cls === this.class().superclass())
+      return cls._prototype[stringValue(selector)].call(this)
     },
 
-    'perform:withArguments:inSuperclass:' (aSymbol, args, cls) {
-      throw new Error('not implemented')
+    'perform:withArguments:inSuperclass:' (selector, args, cls) {
+      assert(cls === this.class().superclass())
+      return cls._prototype[stringValue(selector)].apply(this, arrayValue(args))
     },
 
     'instVarAt:' (idx) {
-      throw new Error('not implemented')
+      const name = this.class()._instVarNames[integerValue(idx) - 1]
+      return this[`$${name}`]
     },
 
     'instVarAt:put:' (idx, obj) {
-      throw new Error('not implemented')
+      const name = this.class()._instVarNames[integerValue(idx) - 1]
+      return (this[`$${name}`] = obj)
     },
 
     'instVarNamed:' (sym) {
-      throw new Error('not implemented')
+      return this[`$${stringValue(sym)}`]
     },
 
     // ----- ohm-som additions -----

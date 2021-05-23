@@ -16,8 +16,17 @@ export const isMethodName = propName =>
 // Properties beginning with `$` are field names.
 export const isFieldName = propName => propName[0] === '$'
 
-export function stringValue (obj) {
-  return obj._checkIsKindOf(obj.$String)._str
+export function arrayValue (obj) {
+  obj._checkIsKindOf(obj.$Array)
+  return obj._arr
+}
+
+export function integerValue (obj) {
+  assert(
+    obj._isInteger(),
+    `Expected Integer, got ${stringValue(obj.class().name())}`
+  )
+  return obj._val
 }
 
 export function numberValue (obj) {
@@ -27,10 +36,7 @@ export function numberValue (obj) {
   )
   return obj._val
 }
-export function integerValue (obj) {
-  assert(
-    obj._isInteger(),
-    `Expected Integer, got ${stringValue(obj.class().name())}`
-  )
-  return obj._val
+
+export function stringValue (obj) {
+  return obj._checkIsKindOf(obj.$String)._str
 }

@@ -161,10 +161,16 @@ semantics.addOperation(
         const className = id.toJS(ctx)
         const superclassName = superclass.toJS(ctx) || 'Object'
         return (
-          `({className:'${className}',superclassName:'${superclassName}'` +
-          `,instanceSlots:{${instSlots.toJS(
-            ctx
-          )}},classSlots:{${classSlotsOpt.toJS(ctx)}}})`
+          '({' +
+          [
+            `className:'${className}'`,
+            `superclassName:'${superclassName}'`,
+            `instanceSlots:{${instSlots.toJS(ctx)}}`,
+            'classSlots:{' +
+              `_instVarNames: [${instSlots.instanceVariableNames()}],` +
+              `${classSlotsOpt.toJS(ctx)}}`
+          ].join(',') +
+          '})'
         )
       },
       Superclass (ident, _) {
@@ -360,6 +366,12 @@ semantics.addOperation('params(ctx)', {
   },
   KeywordPattern (_, params) {
     return params.toJS(this.args.ctx)
+  }
+})
+
+semantics.addOperation('instanceVariableNames()', {
+  InstanceSlots (_, identOpt, _end, methodIter) {
+    return (identOpt.toJS({})[0] || []).map(id => `'${id}'`)
   }
 })
 
