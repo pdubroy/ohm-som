@@ -31,15 +31,15 @@ TestHarness = (
         ^ EmptyTest,
           SpecialSelectorsTest,
           ArrayTest,
-          BlockTest,
+          "BlockTest,"
           ClassLoadingTest,
           ClassStructureTest,
           ClosureTest,
           CoercionTest,
           CompilerReturnTest,
-          DoesNotUnderstandTest,
+          "DoesNotUnderstandTest,"
           DoubleTest,
-          GlobalTest,
+          "GlobalTest,"
           HashTest,
           IntegerTest,
           PreliminaryTest,
