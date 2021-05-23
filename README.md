@@ -2,7 +2,9 @@
 
 A JavaScript implementation of [SOM](http://som-st.github.io/), a minimal Smalltalk for teaching and research. Just a hobby, won't be big and professional like TruffleSOM.
 
-⚠️ **WARNING:** Very much a work in progress. ⚠️
+## Status
+
+**2021-05-23:** ⚠️ Under construction⚠️, but it now passes the majority of the [SOM test suite](./third_party/SOM-st/SOM/TestSuite).
 
 ## Scripts
 
