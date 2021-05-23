@@ -1,3 +1,5 @@
+import { performance } from 'perf_hooks'
+
 import { stringValue } from '../helpers.mjs'
 
 export default {
@@ -33,10 +35,10 @@ export default {
       throw new Error('not implemented')
     },
     ticks () {
-      throw new Error('not implemented')
+      return this.$Integer._new(Math.round(performance.now() * 1000))
     },
     fullGC () {
-      return this
+      return this.$false
     }
   }
 }
