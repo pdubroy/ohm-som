@@ -20,13 +20,13 @@ export default {
       return this.$Integer._new(this._str.length)
     },
     isWhiteSpace () {
-      throw new Error('not implemented')
+      return this._bool(/^\s+$/.test(this._str))
     },
     isLetters () {
-      throw new Error('not implemented')
+      return this._bool(/^\p{L}+$/u.test(this._str))
     },
     isDigits () {
-      throw new Error('not implemented')
+      return this._bool(/^[0-9]+$/.test(this._str))
     },
     '=' (argument) {
       return this._bool(
