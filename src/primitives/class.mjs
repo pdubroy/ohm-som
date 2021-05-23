@@ -6,7 +6,7 @@ export default {
       return this.$String._new(this._name)
     },
     superclass () {
-      return Object.getPrototypeOf(this).class()
+      throw new Error('should not be called — overridden in kernel.mjs')
     },
     _basicNew (props) {
       const self = Object.create(this._prototype)

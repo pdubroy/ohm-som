@@ -74,7 +74,10 @@ export function createKernel () {
   const nil = Nil.new()
 
   // Ensure `Object superclass` returns `nil`.
-  ObjectClass._prototype.superclass = () => nil
+  Class._prototype.superclass = function () {
+    const parentProto = Object.getPrototypeOf(this._prototype)
+    return parentProto ? parentProto.class() : nil
+  }
 
   return { Object: SomObject, Class, Metaclass, Nil, nil }
 }
