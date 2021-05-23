@@ -2,14 +2,18 @@ import { stringValue } from '../helpers.mjs'
 
 export default {
   System: {
-    'global:' (name) {
-      throw new Error('not implemented')
+    'global:' (aSymbol) {
+      const name = stringValue(aSymbol)
+      return this.$Object._prototype[`$${name}`]
     },
-    'global:put:' (name, value) {
-      throw new Error('not implemented')
+    'global:put:' (aSymbol, value) {
+      const name = stringValue(aSymbol)
+      this.$Object._prototype[`$${name}`] = value
+      return this
     },
-    'hasGlobal:' (name) {
-      throw new Error('not implemented')
+    'hasGlobal:' (aSymbol) {
+      const name = stringValue(aSymbol)
+      return this._bool(Reflect.has(this.$Object._prototype, `$${name}`))
     },
     'load:' (symbol) {
       throw new Error('not implemented')
@@ -19,9 +23,11 @@ export default {
     },
     'printString:' (string) {
       process.stdout.write(stringValue(string))
+      return this
     },
     printNewline () {
       console.log()
+      return this
     },
     time () {
       throw new Error('not implemented')
