@@ -12,7 +12,7 @@ export default {
       return this.$Double._new(this._val * numberValue(argument))
     },
     '//' (argument) {
-      return this.$Integer._new(Math.floor(this._val / numberValue(argument)))
+      return this.$Double._new(Math.floor(this._val / numberValue(argument)))
     },
     '%' (argument) {
       return this.$Double._new(this._val % numberValue(argument))
@@ -40,6 +40,11 @@ export default {
     },
     asString () {
       return this._str(`${this._val}`)
+    },
+
+    // ----- ohm-som additions -----
+    _isDouble () {
+      return true
     }
   },
   'Double class': {

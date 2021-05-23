@@ -1,9 +1,9 @@
-import { isMethodName } from '../helpers.mjs'
+import { isFieldName, isMethodName } from '../helpers.mjs'
 
 export default {
   Class: {
     name () {
-      return this.$String._new(this._name)
+      return this.$Symbol._new(this._name)
     },
     superclass () {
       throw new Error('should not be called — overridden in kernel.mjs')
@@ -16,7 +16,11 @@ export default {
       return Object.create(this._prototype)
     },
     fields () {
-      throw new Error('not implemented')
+      return this.$Array._new(
+        Object.keys(this._prototype)
+          .filter(isFieldName)
+          .map(name => name.slice(1))
+      )
     },
     methods () {
       return this.$Array._new(

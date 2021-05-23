@@ -1,44 +1,60 @@
-import { getIntegerValue } from '../helpers.mjs'
+import { numberValue, stringValue } from '../helpers.mjs'
 
 export default {
   Integer: {
     // ----- Arithmetic -----
 
     '+' (other) {
-      return this.class()._new(this._val + getIntegerValue(other))
+      const cls = other._isInteger() ? this.$Integer : this.$Double
+      return cls._new(this._val + numberValue(other))
     },
     '-' (other) {
-      return this.class()._new(this._val - getIntegerValue(other))
+      const cls = other._isInteger() ? this.$Integer : this.$Double
+      return cls._new(this._val - numberValue(other))
     },
     '*' (other) {
-      return this.class()._new(this._val * getIntegerValue(other))
+      const cls = other._isInteger() ? this.$Integer : this.$Double
+      return cls._new(this._val * numberValue(other))
     },
     '/' (other) {
-      return this.class()._new(this._val / getIntegerValue(other))
+      const cls = other._isInteger() ? this.$Integer : this.$Double
+      return cls._new(this._val / numberValue(other))
     },
     '//' (argument) {
-      throw new Error('not implemented')
+      // Same as Double
+      return this.$Double._new(Math.floor(this._val / numberValue(argument)))
     },
-    '%' (argument) {
-      throw new Error('not implemented')
+    // modulo with sign of divisor
+    '%' (divisor) {
+      const cls = divisor._isInteger() ? this.$Integer : this.$Double
+      const divisorVal = numberValue(divisor)
+      return cls._new(
+        (Math.abs(this._val) % Math.abs(divisorVal)) * Math.sign(divisorVal)
+      )
     },
-    'rem:' (argument) {
-      throw new Error('not implemented')
+    // modulo with sign of dividend
+    'rem:' (divisor) {
+      const cls = divisor._isInteger() ? this.$Integer : this.$Double
+      const divisorVal = numberValue(divisor)
+      return cls._new(
+        (Math.abs(this._val) % Math.abs(divisorVal)) * Math.sign(divisorVal)
+      )
     },
     '&' (argument) {
-      throw new Error('not implemented')
+      throw new Error('not implemented: Integer>>&')
     },
     '<<' (argument) {
-      throw new Error('not implemented')
+      throw new Error('not implemented: Integer>><<')
     },
     '>>>' (argument) {
-      throw new Error('not implemented')
+      throw new Error('not implemented: Integer>>>>>')
     },
     'bitXor:' (argument) {
-      throw new Error('not implemented')
+      throw new Error('not implemented: Integer>>bitXor:')
     },
     sqrt () {
-      throw new Error('not implemented')
+      // Same as Double
+      return this.$Double._new(Math.sqrt(this._val))
     },
 
     // ----- Random numbers -----
@@ -50,12 +66,14 @@ export default {
 
     '=' (other) {
       return this._bool(
-        other._isKindOf(this.$Integer) && this._val === getIntegerValue(other)
+        (other._isInteger() || other._isDouble()) &&
+          this._val === numberValue(other)
       )
     },
     '<' (other) {
       return this._bool(
-        other._isKindOf(this.$Integer) && this._val < getIntegerValue(other)
+        (other._isInteger() || other._isDouble()) &&
+          this._val < numberValue(other)
       )
     },
 
@@ -69,6 +87,12 @@ export default {
     },
     as32BitUnsignedValue () {
       throw new Error('not implemented')
+    },
+
+    // ----- ohm-som additions -----
+
+    _isInteger () {
+      return true
     }
   },
 
@@ -76,8 +100,11 @@ export default {
     _new (val) {
       return this._basicNew({ _val: val })
     },
+    _newFromString (str) {
+      return this._new(parseInt(str, 10))
+    },
     'fromString:' (aString) {
-      return this._new(parseInt(aString, 10))
+      return this._newFromString(stringValue(aString))
     }
   }
 }

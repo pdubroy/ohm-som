@@ -1,15 +1,15 @@
-import { getIntegerValue } from '../helpers.mjs'
+import { numberValue } from '../helpers.mjs'
 
 export default {
   Array: {
     'at:' (index) {
-      return this._arr[getIntegerValue(index) - 1]
+      return this._arr[numberValue(index) - 1]
     },
     'at:put:' (index, value) {
-      return (this._arr[getIntegerValue(index) - 1] = value)
+      return (this._arr[numberValue(index) - 1] = value)
     },
     length () {
-      return this._int(this._arr.length)
+      return this.$Integer._new(this._arr.length)
     }
   },
   'Array class': {
@@ -17,7 +17,7 @@ export default {
       return this._basicNew({ _arr: arr })
     },
     'new:' (length) {
-      return this._new(new Array(getIntegerValue(length)))
+      return this._new(new Array(numberValue(length)))
     }
   }
 }

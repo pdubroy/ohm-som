@@ -5,8 +5,8 @@ import { createKernel } from './kernel.mjs'
 const { Object, Class, Metaclass, Nil, nil } = createKernel()
 
 test('kernel classes', t => {
-  // Fake the string constructor and make it return a native string.
-  Object._prototype.$String = {
+  // Fake the Symbol constructor to make it return a native string.
+  Object._prototype.$Symbol = {
     _new: str => str
   }
 

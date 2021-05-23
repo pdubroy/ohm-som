@@ -15,7 +15,7 @@ export default {
       throw new Error('not implemented')
     },
     'exit:' (errno) {
-      throw new Error('not implemented')
+      process.exit(errno)
     },
     'printString:' (string) {
       process.stdout.write(stringValue(string))

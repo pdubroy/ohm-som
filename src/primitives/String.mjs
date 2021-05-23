@@ -1,4 +1,4 @@
-import { getIntegerValue, stringValue } from '../helpers.mjs'
+import { integerValue, stringValue } from '../helpers.mjs'
 
 export default {
   String: {
@@ -6,13 +6,13 @@ export default {
       return this.$String._new(this._str + stringValue(argument.asString()))
     },
     asSymbol () {
-      throw new Error('not implemented')
+      return this.$Symbol._new(this._str)
     },
     hashcode () {
       throw new Error('not implemented')
     },
     length () {
-      return this._int(this._str.length)
+      return this.$Integer._new(this._str.length)
     },
     isWhiteSpace () {
       throw new Error('not implemented')
@@ -29,8 +29,8 @@ export default {
       )
     },
     'primSubstringFrom:to:' (start, end) {
-      const startVal = getIntegerValue(start) - 1
-      const endVal = getIntegerValue(end)
+      const startVal = integerValue(start) - 1
+      const endVal = integerValue(end)
       return this.$String._new(this._str.slice(startVal, endVal))
     },
     [Symbol.toPrimitive] (hint) {

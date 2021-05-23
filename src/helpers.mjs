@@ -13,9 +13,8 @@ export function allKeys (obj) {
 export const isMethodName = propName =>
   propName[0] !== '_' && propName[0] !== '$'
 
-export function getIntegerValue (obj) {
-  return obj._checkIsKindOf(obj.$Integer)._val
-}
+// Properties beginning with `$` are field names.
+export const isFieldName = propName => propName[0] === '$'
 
 export function stringValue (obj) {
   return obj._checkIsKindOf(obj.$String)._str
@@ -23,8 +22,15 @@ export function stringValue (obj) {
 
 export function numberValue (obj) {
   assert(
-    obj._isKindOf(obj.$Integer) || obj._isKindOf(obj.$Double),
+    obj._isInteger() || obj._isDouble(),
     `Expected Integer or Double, got ${stringValue(obj.class().name())}`
+  )
+  return obj._val
+}
+export function integerValue (obj) {
+  assert(
+    obj._isInteger(),
+    `Expected Integer, got ${stringValue(obj.class().name())}`
   )
   return obj._val
 }

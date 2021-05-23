@@ -51,6 +51,8 @@ export default {
       throw new Error('not implemented')
     },
 
+    // ----- ohm-som additions -----
+
     _isKindOf (cls) {
       let proto = this
       while ((proto = Object.getPrototypeOf(proto))) {
@@ -65,8 +67,11 @@ export default {
       assert(this._isKindOf(cls), `Not a ${className}`)
       return this
     },
-    _checkIsInteger () {
-      return this._checkIsKindOf(this.$Integer)
+    _isInteger () {
+      return false
+    },
+    _isDouble () {
+      return false
     }
   }
 }
