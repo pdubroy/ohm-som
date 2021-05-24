@@ -1,4 +1,4 @@
-import { isFieldName, isMethodName } from '../helpers.mjs'
+import { isFieldName, isSelector } from '../helpers.mjs'
 
 export default {
   Class: {
@@ -34,7 +34,7 @@ export default {
     methods () {
       return this.$Array._new(
         Object.keys(this._prototype)
-          .filter(isMethodName)
+          .filter(isSelector)
           .map(name => this.$Method._new(this, name))
       )
     }

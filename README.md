@@ -4,7 +4,7 @@ A JavaScript implementation of [SOM](http://som-st.github.io/), a minimal Smallt
 
 ## Status
 
-**2021-05-23:** ⚠️ Under construction⚠️, but it now passes the majority of the [SOM test suite](./third_party/SOM-st/SOM/TestSuite).
+**2021-05-23:** ⚠️Under construction⚠️, but it now passes the majority of the [SOM test suite](./third_party/SOM-st/SOM/TestSuite).
 
 ## Scripts
 

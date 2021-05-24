@@ -1,8 +1,8 @@
-import { isMethodName } from './helpers.mjs'
+import { isSelector } from './helpers.mjs'
 
 const superProxyHandler = {
   get (target, propName, receiver) {
-    if (isMethodName(propName)) {
+    if (isSelector(propName)) {
       const superclass = target.class().superclass()
       return superclass._prototype[propName]
     }

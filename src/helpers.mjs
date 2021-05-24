@@ -10,8 +10,7 @@ export function allKeys (obj) {
 }
 
 // Properties beginning with `_` or `$` are not methods; everything else is.
-export const isMethodName = propName =>
-  propName[0] !== '_' && propName[0] !== '$'
+export const isSelector = propName => propName[0] !== '_' && propName[0] !== '$'
 
 // Properties beginning with `$` are field names.
 export const isFieldName = propName => propName[0] === '$'

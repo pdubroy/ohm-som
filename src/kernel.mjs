@@ -19,18 +19,18 @@ export function createClassStub (proto, name, superclass, instSlots = {}) {
 }
 
 // Returns freshly-created set of kernel classes/objects.
-export function createKernel () {
+export function createKernel (rootProto = null) {
   // First, create stubs.
   const SomObject = createClassStub(
-    null /* -> ObjectClass (1) */,
+    null, // -> ObjectClass -- see (1), below
     'Object',
-    null,
+    rootProto, // -> Seen as `nil` -- see (4)
     primitives.Object
   )
   SomObject._prototype.class = () => SomObject
 
   const Class = createClassStub(
-    null /* -> ClassClass (2) */,
+    null, // -> ClassClass (2)
     'Class',
     SomObject,
     primitives.Class
@@ -38,7 +38,7 @@ export function createKernel () {
   Class._prototype.class = () => Class
 
   const Metaclass = createClassStub(
-    null /* -> MetaclassClass (3) */,
+    null, // -> MetaclassClass (3)
     'Metaclass',
     Class
   )
@@ -57,25 +57,25 @@ export function createKernel () {
   )
 
   // (1) Object is-a ObjectClass
-  Object.setPrototypeOf(SomObject, ObjectClass._prototype)
+  Reflect.setPrototypeOf(SomObject, ObjectClass._prototype)
   SomObject.class = () => ObjectClass
 
   // (2) Class is-a ClassClass
-  Object.setPrototypeOf(Class, ClassClass._prototype)
+  Reflect.setPrototypeOf(Class, ClassClass._prototype)
   Class.class = () => ClassClass
 
   // (3) Metaclass is-a MetaclassClass
-  Object.setPrototypeOf(Metaclass, MetaclassClass._prototype)
+  Reflect.setPrototypeOf(Metaclass, MetaclassClass._prototype)
   Metaclass.class = () => MetaclassClass
 
-  // Finally, create `Nil`, which is required for initializing other classes.
+  // Create `nil`, which is required for initializing other classes.
   const NilClass = createClassStub(Metaclass, 'Nil class', ObjectClass)
   const Nil = createClassStub(NilClass, 'Nil', SomObject)
   const nil = Nil.new()
 
-  // Ensure `Object superclass` returns `nil`.
+  // (4) Implement superclass and ensure `Object superclass` returns `nil`.
   Class._prototype.superclass = function () {
-    const parentProto = Object.getPrototypeOf(this._prototype)
+    const parentProto = Reflect.getPrototypeOf(this._prototype)
     return parentProto ? parentProto.class() : nil
   }
 
