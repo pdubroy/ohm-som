@@ -2,6 +2,7 @@ import test from 'ava'
 import path from 'path'
 
 import { ClassLoader } from './ClassLoader.mjs'
+import { createKernel } from './kernel.mjs'
 import { testDataPath } from './paths.mjs'
 
 function installFakeString (classLoader) {
@@ -14,7 +15,7 @@ function installFakeString (classLoader) {
 }
 
 test('primitive methods', t => {
-  const loader = new ClassLoader()
+  const loader = new ClassLoader(createKernel())
   loader.registerPrimitives({
     Thing: {
       primitiveMethod: () => 'primitive method'
@@ -35,7 +36,7 @@ test('primitive methods', t => {
 })
 
 test('compiled methods', t => {
-  const loader = new ClassLoader()
+  const loader = new ClassLoader(createKernel())
   installFakeString(loader)
 
   loader.registerClass('Thing', path.join(testDataPath, 'Thing.som'))

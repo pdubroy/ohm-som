@@ -4,32 +4,34 @@ import path from 'path'
 
 import { assert } from './assert.mjs'
 import { ClassLoader } from './ClassLoader.mjs'
+import { createKernel } from './kernel.mjs'
 import { somClassLibPath } from './paths.mjs'
 import { ReturnValue } from './ReturnValue.mjs'
 import { createSuperProxy } from './runtime.mjs'
 
 export class Environment {
   constructor () {
-    this._classLoader = new ClassLoader()
-
-    const Object = this._classLoader.loadClass('Object')
-    const g = (this.globals = Object._prototype)
+    const g = (this.globals = Object.create(null))
+    const kernel = createKernel(this.globals)
+    this._classLoader = new ClassLoader(kernel)
 
     this._registerStdLibClasses()
 
-    g.$true = g.$True.new()
-    g.$false = g.$False.new()
-    g.$nil = Object.superclass()
-    g.$system = g.$System._basicNew()
+    Object.assign(this.globals, {
+      $true: g.$True.new(),
+      $false: g.$False.new(),
+      $nil: kernel.nil,
+      $system: g.$System._basicNew(),
 
-    // Convenience constructors.
-    g._bool = val => (val ? g.$true : g.$false)
-    g._block1 = fn => g.$Block1._new(fn)
-    g._block2 = fn => g.$Block2._new(fn)
-    g._block3 = fn => g.$Block3._new(fn)
+      // Convenience constructors.
+      _bool: val => (val ? g.$true : g.$false),
+      _block1: fn => g.$Block1._new(fn),
+      _block2: fn => g.$Block2._new(fn),
+      _block3: fn => g.$Block3._new(fn),
 
-    g._super = createSuperProxy
-    g._symbolTable = new Map()
+      _super: createSuperProxy,
+      _symbolTable: new Map()
+    })
 
     g.$Block._prototype['whileTrue:'] =
       g.$Block._prototype['_OVERRIDE_whileTrue:']

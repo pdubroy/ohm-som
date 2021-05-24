@@ -9,11 +9,15 @@ export function allKeys (obj) {
   return keys
 }
 
-// Properties beginning with `_` or `$` are not methods; everything else is.
-export const isSelector = propName => propName[0] !== '_' && propName[0] !== '$'
-
-// Properties beginning with `$` are field names.
+// Properties beginning with '$' are field names.
 export const isFieldName = propName => propName[0] === '$'
+
+// Properties beginning with '_' are internal properties.
+export const isInternalProperty = propName => propName[0] === '_'
+
+// A selector is any property that is not a field name or an internal property.
+export const isSelector = propName =>
+  !isFieldName(propName) && !isInternalProperty(propName)
 
 export function arrayValue (obj) {
   obj._checkIsKindOf(obj.$Array)

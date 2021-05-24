@@ -3,7 +3,7 @@ import prettier from 'prettier-standard'
 
 import { assert, checkNotNull } from './assert.mjs'
 import { compileClass } from './index.mjs'
-import { createKernel, createClassStub } from './kernel.mjs'
+import { createClassStub } from './kernel.mjs'
 import { Logger } from './Logger.mjs'
 import { somClassLibPath } from './paths.mjs'
 import primitives from './primitives/index.mjs'
@@ -11,12 +11,12 @@ import primitives from './primitives/index.mjs'
 const logger = Logger.get('classloading')
 
 export class ClassLoader {
-  constructor () {
+  constructor (kernel) {
     this._depth = -1
     this._primitives = new Map()
     this._classMap = new Map()
+
     this.registerPrimitives(primitives)
-    const kernel = createKernel()
     this._initializeKernelClasses(kernel)
     this._nil = kernel.nil
   }

@@ -1,18 +1,14 @@
 import primitives from './primitives/index.mjs'
 
-function extend (superclass, props = {}) {
-  return Object.assign(
-    Object.create(superclass && superclass._prototype),
-    props
-  )
+function extend (obj, props = {}) {
+  return Object.assign(Object.create(obj), props)
 }
 
-// Create a new stub class object named `name` which delegates to `proto`.
-// This does not create the associated metaclass.
-export function createClassStub (proto, name, superclass, instSlots = {}) {
-  const classObj = extend(proto, {
+// Create a new stub class object named `name` as an instance of `cls`.
+export function createClassStub (cls, name, superclass, instSlots = {}) {
+  const classObj = extend(cls && cls._prototype, {
     _name: name,
-    _prototype: extend(superclass, instSlots)
+    _prototype: extend(superclass._prototype, instSlots)
   })
   classObj._prototype.class = () => classObj
   return classObj
@@ -24,10 +20,9 @@ export function createKernel (rootProto = null) {
   const SomObject = createClassStub(
     null, // -> ObjectClass -- see (1), below
     'Object',
-    rootProto, // -> Seen as `nil` -- see (4)
+    { _prototype: rootProto }, // -> Seen as `nil` -- see (4)
     primitives.Object
   )
-  SomObject._prototype.class = () => SomObject
 
   const Class = createClassStub(
     null, // -> ClassClass (2)
@@ -42,7 +37,6 @@ export function createKernel (rootProto = null) {
     'Metaclass',
     Class
   )
-  Metaclass._prototype.class = () => Metaclass
 
   // Now create the metaclasses and wire them up.
   // Note that SOM is different from Smalltalk-80 in that `Metaclass superclass`
@@ -76,7 +70,7 @@ export function createKernel (rootProto = null) {
   // (4) Implement superclass and ensure `Object superclass` returns `nil`.
   Class._prototype.superclass = function () {
     const parentProto = Reflect.getPrototypeOf(this._prototype)
-    return parentProto ? parentProto.class() : nil
+    return parentProto === rootProto ? nil : parentProto.class()
   }
 
   return { Object: SomObject, Class, Metaclass, Nil, nil }

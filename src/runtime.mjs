@@ -1,7 +1,7 @@
 import { isSelector } from './helpers.mjs'
 
 const superProxyHandler = {
-  get (target, propName, receiver) {
+  get (target, propName, _receiver) {
     if (isSelector(propName)) {
       const superclass = target.class().superclass()
       return superclass._prototype[propName]
