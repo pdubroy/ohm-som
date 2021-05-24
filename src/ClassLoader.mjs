@@ -7,6 +7,7 @@ import { createClassStub } from './kernel.mjs'
 import { Logger } from './Logger.mjs'
 import { somClassLibPath } from './paths.mjs'
 import primitives from './primitives/index.mjs'
+import { sendMessage } from './runtime.mjs'
 
 const logger = Logger.get('classloading')
 
@@ -158,7 +159,7 @@ export class ClassLoader {
 
   _eval (js) {
     // eslint-disable-next-line no-new-func
-    return new Function('nil', `return ${js}`)(this._nil)
+    return new Function('nil', '$', `return ${js}`)(this._nil, sendMessage)
   }
 
   _addCompiledMethodsToClass (classObj, instanceSlots, classSlots) {

@@ -99,6 +99,8 @@ semantics.addAttribute(
   })()
 )
 
+const mangleIdentifier = id => (jsReservedWords.includes(id) ? `_${id}` : id)
+
 semantics.addOperation('identifiers()', {
   UnaryPattern (selector) {
     return []
@@ -122,7 +124,7 @@ semantics.addOperation('identifiers()', {
     return children.flatMap(c => c.identifiers())
   },
   identifier (first, rest) {
-    return [this.sourceString]
+    return [mangleIdentifier(this.sourceString)]
   }
 })
 
@@ -144,11 +146,7 @@ semantics.addOperation(
       const { ctx } = this.args
       const selector = message.selector()
       const args = getMessageArgs(message, ctx)
-      if (args.length === 0) {
-        // Unary messages are valid JS identifiers, so we can use dot notation.
-        return `${exp.toJS(ctx)}.${selector}(${args})`
-      }
-      return `${exp.toJS(ctx)}['${selector}'](${args})`
+      return `$(${exp.toJS(ctx)}, '${selector}', ${args})`
     }
 
     return {
@@ -177,8 +175,7 @@ semantics.addOperation(
         return ident.toJS(this.args.ctx)
       },
       identifier (first, rest) {
-        const id = this.sourceString
-        return jsReservedWords.includes(id) ? `_${id}` : id
+        return mangleIdentifier(this.sourceString)
       },
       InstanceSlots: handleInstanceOrClassSlots,
       ClassSlots: handleInstanceOrClassSlots,

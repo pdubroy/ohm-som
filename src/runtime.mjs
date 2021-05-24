@@ -13,3 +13,13 @@ const superProxyHandler = {
 export function createSuperProxy (target) {
   return new Proxy(target, superProxyHandler)
 }
+
+export function sendMessage (receiver, selector, ...args) {
+  if (selector in receiver) {
+    return receiver[selector](...args)
+  }
+  return receiver['doesNotUnderstand:arguments:'](
+    receiver.$Symbol._new(selector),
+    receiver.$Array._new(args)
+  )
+}
