@@ -8,7 +8,7 @@
     "lint": "prettier-standard --check && standard",
     "format": "prettier-standard --format && standard --fix",
     "generate-classes": "node scripts/generateClassLib.mjs",
-    "som-test-suite": "node $NODE_ARGS scripts/runSomTestSuite.mjs"
+    "som-test-suite": "node $NODE_ARGS bin/som.mjs --classpath third_party/SOM-st/SOM/TestSuite TestHarness"
   },
   "author": "Patrick Dubroy <pdubroy@gmail.com>",
   "license": "MIT",
@@ -16,12 +16,12 @@
     "ava": "^3.15.0",
     "prettier-standard": "^16.4.1",
     "standard": "^16.0.3",
-    "walk-sync": "^2.2.0",
-    "yargs": "^16.2.0"
+    "walk-sync": "^2.2.0"
   },
   "dependencies": {
     "fnv1a": "^1.0.1",
     "js-logger": "^1.6.1",
+    "minimist": "^1.2.5",
     "ohm-js": "^15.5.0"
   },
   "ava": {

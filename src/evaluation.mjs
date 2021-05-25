@@ -15,7 +15,7 @@ export class Environment {
     const kernel = createKernel(this.globals)
     this._classLoader = new ClassLoader(kernel)
 
-    this._registerStdLibClasses()
+    this.registerClasspath(somClassLibPath)
 
     Object.assign(this.globals, {
       $true: g.$True.new(),
@@ -37,35 +37,12 @@ export class Environment {
       g.$Block._prototype['_OVERRIDE_whileTrue:']
   }
 
-  _registerStdLibClasses () {
-    for (const entry of fs.readdirSync(somClassLibPath, {
-      withFileTypes: true
-    })) {
-      const className = path.basename(entry.name, '.som')
-      this.registerClass(className, path.join(somClassLibPath, entry.name))
-    }
-  }
-
   get (key) {
     return this.globals[`$${key}`]
   }
 
   set (key, val) {
     this.globals[`$${key}`] = val
-  }
-
-  // TODO: Could we actually implement message sends as regular JS method calls,
-  // with a Proxy object in the prototype chain? That would be cool!
-  send (receiver, selector, args) {
-    const method = receiver[selector]
-    if (method) {
-      return method.call(receiver, ...args)
-    } else {
-      // TODO: Implement doesNotUnderstand:arguments:
-      throw new Error(
-        `${receiver} doesNotUnderstand: #${selector} args: [${args}]`
-      )
-    }
   }
 
   // Registers a class for lazy loading, if it is not already loaded.
@@ -79,6 +56,15 @@ export class Environment {
         configurable: true,
         enumberable: true
       })
+    }
+  }
+
+  registerClasspath (classpath) {
+    for (const filename of fs.readdirSync(classpath)) {
+      if (path.extname(filename) === '.som') {
+        const className = path.basename(filename, '.som')
+        this.registerClass(className, path.join(classpath, filename))
+      }
     }
   }
 
@@ -107,6 +93,12 @@ export class Environment {
       this.registerClass(className)
     }
     return classObj
+  }
+
+  run (args) {
+    const { $Array, $String, $system } = this.globals
+    const argsArray = $Array._new(args.map(arg => $String._new(arg)))
+    $system['initialize:'](argsArray)
   }
 }
 

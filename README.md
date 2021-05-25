@@ -6,6 +6,14 @@ A JavaScript implementation of [SOM](http://som-st.github.io/), a minimal Smallt
 
 **2021-05-23:** ⚠️Under construction⚠️, but it now passes the majority of the [SOM test suite](./third_party/SOM-st/SOM/TestSuite).
 
+## Usage
+
+Example:
+
+```bash
+bin/som.mjs --classpath test/data HelloWorld
+```
+
 ## Scripts
 
 - `npm test` runs the smaller unit / integration tests (should all pass)

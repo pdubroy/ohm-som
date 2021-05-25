@@ -1,7 +1,9 @@
 import test from 'ava'
 
-import { runSomTestSuite } from '../scripts/runSomTestSuite.mjs'
+import { Environment } from '../src/evaluation.mjs'
 
 test('SOM test suite', t => {
-  t.notThrows(runSomTestSuite())
+  const env = new Environment()
+  env.registerClasspath('third_party/SOM-st/SOM/TestSuite')
+  t.notThrows(() => env.run(['TestHarness']))
 })
