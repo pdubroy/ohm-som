@@ -11,7 +11,7 @@ A JavaScript implementation of [SOM](http://som-st.github.io/), a minimal Smallt
 Example:
 
 ```bash
-bin/som.mjs --classpath test/data HelloWorld
+node bin/som.mjs --classpath test/data HelloWorld
 ```
 
 ## Scripts
