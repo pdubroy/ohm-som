@@ -1,7 +1,7 @@
 import test from 'ava'
 
-import { doIt, Environment } from './evaluation.mjs'
-import { stringValue } from './helpers.mjs'
+import { doIt, Environment } from '../evaluation.mjs'
+import { stringValue } from '../helpers.mjs'
 
 test('class hierarchy', t => {
   t.is(stringValue(doIt('Object name')), 'Object')

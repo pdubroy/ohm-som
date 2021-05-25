@@ -1,9 +1,9 @@
 import test from 'ava'
 import path from 'path'
 
-import { ClassLoader } from './ClassLoader.mjs'
-import { createKernel } from './kernel.mjs'
-import { testDataPath } from './paths.mjs'
+import { ClassLoader } from '../ClassLoader.mjs'
+import { createKernel } from '../kernel.mjs'
+import { testDataPath } from '../paths.mjs'
 
 function installFakeString (classLoader) {
   const Object = classLoader.loadClass('Object')

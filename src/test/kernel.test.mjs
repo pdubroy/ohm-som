@@ -1,6 +1,6 @@
 import test from 'ava'
 
-import { createKernel } from './kernel.mjs'
+import { createKernel } from '../kernel.mjs'
 
 const { Object, Class, Metaclass, Nil, nil } = createKernel()
 

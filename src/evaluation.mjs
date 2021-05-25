@@ -6,7 +6,6 @@ import { assert } from './assert.mjs'
 import { ClassLoader } from './ClassLoader.mjs'
 import { createKernel } from './kernel.mjs'
 import { somClassLibPath } from './paths.mjs'
-import { ReturnValue } from './ReturnValue.mjs'
 import { createSuperProxy } from './runtime.mjs'
 
 export class Environment {
@@ -39,10 +38,6 @@ export class Environment {
 
   get (key) {
     return this.globals[`$${key}`]
-  }
-
-  set (key, val) {
-    this.globals[`$${key}`] = val
   }
 
   // Registers a class for lazy loading, if it is not already loaded.
@@ -103,12 +98,5 @@ export class Environment {
 }
 
 export function doIt (source) {
-  const env = new Environment()
-
-  try {
-    return env.eval(source)
-  } catch (e) {
-    if (e instanceof ReturnValue) return e.v
-    throw e
-  }
+  return new Environment().eval(source)
 }

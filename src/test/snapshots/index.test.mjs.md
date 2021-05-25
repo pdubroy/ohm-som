@@ -1,4 +1,4 @@
-# Snapshot report for `src/index.test.mjs`
+# Snapshot report for `src/test/index.test.mjs`
 
 The actual snapshot is saved in `index.test.mjs.snap`.
 
