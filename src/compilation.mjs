@@ -165,7 +165,7 @@ semantics.addOperation(
             `superclassName:'${superclassName}'`,
             `instanceSlots:{${instSlots.toJS(ctx)}}`,
             'classSlots:{' +
-              `_instVarNames: [${instSlots.instanceVariableNames()}],` +
+              `_instVarNames: [${instSlots._instanceVariableNames()}],` +
               `${classSlotsOpt.toJS(ctx)}}`
           ].join(',') +
           '})'
@@ -190,7 +190,7 @@ semantics.addOperation(
         this.lexicalVars // eslint-disable-line no-unused-expressions
 
         const selector = pattern._selector()
-        const paramList = pattern.params(ctx).join(', ')
+        const paramList = pattern._params().join(', ')
         return `'${selector}'(${paramList}){${body.toJS(ctx)}}`
       },
       MethodBlock (_open, blockContentsOpt, _close) {
@@ -290,15 +290,12 @@ semantics.addOperation(
 
 function getMessageArgs (message, ctx) {
   const { ctorName } = message._node
-  switch (ctorName) {
-    case 'KeywordMessage':
-    case 'BinaryMessage':
-      return message.child(1).toJS(ctx)
-    case 'UnaryMessage':
-      return []
-    default:
-      assert(false, `unexpected node type: '${ctorName}'`)
+  if (ctorName === 'KeywordMessage' || ctorName === 'BinaryMessage') {
+    return message.child(1).toJS(ctx)
+  } else if (ctorName === 'UnaryMessage') {
+    return []
   }
+  assert(false, `unexpected node type: '${ctorName}'`)
 }
 
 // Return the arity of a NestedBlock node.
@@ -325,19 +322,14 @@ semantics.addOperation('_selector', {
   KeywordMessage: (kw, _) => kw.children.map(c => c.sourceString).join('')
 })
 
-semantics.addOperation('params(ctx)', {
-  UnaryPattern (_) {
-    return []
-  },
-  BinaryPattern (_, param) {
-    return [param.toJS(this.args.ctx)]
-  },
-  KeywordPattern (_, params) {
-    return params.toJS(this.args.ctx)
-  }
+// Return the function parameters for a Pattern node.
+semantics.addOperation('_params()', {
+  UnaryPattern: _ => [],
+  BinaryPattern: (_, param) => [param.toJS({})],
+  KeywordPattern: (_, params) => params.toJS({})
 })
 
-semantics.addOperation('instanceVariableNames()', {
+semantics.addOperation('_instanceVariableNames()', {
   InstanceSlots (_, identOpt, _end, methodIter) {
     return (identOpt.toJS({})[0] || []).map(id => `'${id}'`)
   }
