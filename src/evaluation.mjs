@@ -1,6 +1,5 @@
 import fs from 'fs'
 import path from 'path'
-// import prettier from 'prettier-standard'
 
 import { assert } from './assert.mjs'
 import { ClassLoader } from './ClassLoader.mjs'
@@ -13,14 +12,13 @@ export class Environment {
     const g = (this.globals = Object.create(null))
     const kernel = createKernel(this.globals)
     this._classLoader = new ClassLoader(kernel)
-
     this.registerClasspath(somClassLibPath)
 
     Object.assign(this.globals, {
       $true: g.$True.new(),
       $false: g.$False.new(),
       $nil: kernel.nil,
-      $system: g.$System._basicNew(),
+      $system: g.$System._new(g, this._classLoader),
 
       // Convenience constructors.
       _bool: val => (val ? g.$true : g.$false),

@@ -16,7 +16,7 @@ function installFakeString (classLoader) {
 
 test('primitive methods', t => {
   const loader = new ClassLoader(createKernel())
-  loader.registerPrimitives({
+  loader._registerPrimitives({
     Thing: {
       primitiveMethod: () => 'primitive method'
     },

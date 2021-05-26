@@ -81,7 +81,7 @@ test('implicit self return', t => {
 test('Integer>>to:do:', t => {
   const env = new Environment()
   let count = 0
-  env._classLoader.registerPrimitives({
+  env._classLoader._registerPrimitives({
     Test: {
       incrementCount () {
         count += 1

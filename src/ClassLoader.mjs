@@ -2,7 +2,7 @@ import fs from 'fs'
 import prettier from 'prettier-standard'
 
 import { assert, checkNotNull } from './assert.mjs'
-import { compileClass } from './index.mjs'
+import { compileClass } from './compilation.mjs'
 import { createClassStub } from './kernel.mjs'
 import { Logger } from './Logger.mjs'
 import { somClassLibPath } from './paths.mjs'
@@ -17,7 +17,7 @@ export class ClassLoader {
     this._primitives = new Map()
     this._classMap = new Map()
 
-    this.registerPrimitives(primitives)
+    this._registerPrimitives(primitives)
     this._initializeKernelClasses(kernel)
     this._nil = kernel.nil
   }
@@ -45,7 +45,7 @@ export class ClassLoader {
     return this._primitives.get(name) || defaultValue
   }
 
-  registerPrimitives (primitives) {
+  _registerPrimitives (primitives) {
     for (const name in primitives) {
       assert(
         !this._primitives.has(name),

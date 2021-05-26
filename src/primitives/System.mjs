@@ -5,20 +5,25 @@ import { stringValue } from '../helpers.mjs'
 export default {
   System: {
     'global:' (aSymbol) {
-      const name = stringValue(aSymbol)
-      return this.$Object._prototype[`$${name}`]
+      return this._global(stringValue(aSymbol))
+    },
+    _global (name) {
+      return this._globals[`$${name}`]
     },
     'global:put:' (aSymbol, value) {
       const name = stringValue(aSymbol)
-      this.$Object._prototype[`$${name}`] = value
+      this._globals[`$${name}`] = value
       return this
     },
     'hasGlobal:' (aSymbol) {
       const name = stringValue(aSymbol)
-      return this._bool(Reflect.has(this.$Object._prototype, `$${name}`))
+      return this._bool(name in this._globals)
     },
     'load:' (symbol) {
-      throw new Error('not implemented')
+      return this._load(stringValue(symbol))
+    },
+    _load (className) {
+      return this._classLoader.loadClass(className)
     },
     'exit:' (errno) {
       process.exit(errno)
@@ -39,6 +44,11 @@ export default {
     },
     fullGC () {
       return this.$false
+    }
+  },
+  'System class': {
+    _new (globals, classLoader) {
+      return this._basicNew({ _globals: globals, _classLoader: classLoader })
     }
   }
 }

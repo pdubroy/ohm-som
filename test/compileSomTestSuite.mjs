@@ -3,7 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import walkSync from 'walk-sync'
 
-import { compileClass } from '../src/index.mjs'
+import { compileClass } from '../src/compilation.mjs'
 import { somTestSuitePath } from '../src/paths.mjs'
 
 // An AVA "macro function" that tests that the SOM source file at `filename` can be parsed.

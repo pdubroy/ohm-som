@@ -1,6 +1,6 @@
 import fs from 'fs'
 
-import { grammar, semantics } from '../src/index.mjs'
+import { grammar, semantics } from '../src/compilation.mjs'
 
 // Return an array of selectors representing all of the primitive methods in the class.
 semantics.addOperation('primitiveMethods', {
