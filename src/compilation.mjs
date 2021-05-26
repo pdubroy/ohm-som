@@ -40,16 +40,32 @@ semantics.addOperation('superclassName', {
   }
 })
 
-// Return `true` if the method is a primitive method, and `false` otherwise.
-semantics.addOperation('isPrimitive', {
-  Method (pattern, _, primitiveOrMethodBlock) {
-    return primitiveOrMethodBlock.isPrimitive()
+const mangleIdentifier = id => (jsReservedWords.includes(id) ? `_${id}` : id)
+
+semantics.addOperation('_identifiers()', {
+  UnaryPattern (selector) {
+    return []
   },
-  primitive (_) {
-    return true
+  BinaryPattern (selector, ident) {
+    return ident._identifiers()
   },
-  MethodBlock (_, blockContents, _end) {
-    return false
+  KeywordPattern (keywordIter, identIter) {
+    return identIter._identifiers()
+  },
+  BlockPattern (blockArguments, _) {
+    return blockArguments._identifiers()
+  },
+  BlockArguments (_, identIter) {
+    return identIter._identifiers()
+  },
+  _nonterminal (children) {
+    return children.flatMap(c => c._identifiers())
+  },
+  _iter (children) {
+    return children.flatMap(c => c._identifiers())
+  },
+  identifier (first, rest) {
+    return [mangleIdentifier(this.sourceString)]
   }
 })
 
@@ -70,20 +86,20 @@ semantics.addAttribute(
 
     return {
       Method (pattern, _eq, body) {
-        return withEnv(pattern.identifiers(), () => {
+        return withEnv(pattern._identifiers(), () => {
           body.lexicalVars // eslint-disable-line no-unused-expressions
         })
       },
       BlockContents (_, localDefsOpt, _1, blockBody) {
         const localDefs = localDefsOpt.child(0)
-        const ids = localDefs ? localDefs.identifiers() : []
+        const ids = localDefs ? localDefs._identifiers() : []
         return withEnv(ids, () => {
           blockBody.lexicalVars // eslint-disable-line no-unused-expressions
         })
       },
       NestedBlock (_, blockPatternOpt, blockContentsOpt, _1) {
         const blockPattern = blockPatternOpt.child(0)
-        const ids = blockPattern ? blockPattern.identifiers() : []
+        const ids = blockPattern ? blockPattern._identifiers() : []
         return withEnv(ids, () => {
           blockContentsOpt.lexicalVars // eslint-disable-line no-unused-expressions
         })
@@ -99,32 +115,16 @@ semantics.addAttribute(
   })()
 )
 
-const mangleIdentifier = id => (jsReservedWords.includes(id) ? `_${id}` : id)
-
-semantics.addOperation('identifiers()', {
-  UnaryPattern (selector) {
-    return []
+// Return `true` if the method is a primitive method, and `false` otherwise.
+semantics.addOperation('_isPrimitive', {
+  Method (pattern, _, primitiveOrMethodBlock) {
+    return primitiveOrMethodBlock._isPrimitive()
   },
-  BinaryPattern (selector, ident) {
-    return ident.identifiers()
+  primitive (_) {
+    return true
   },
-  KeywordPattern (keywordIter, identIter) {
-    return identIter.identifiers()
-  },
-  BlockPattern (blockArguments, _) {
-    return blockArguments.identifiers()
-  },
-  BlockArguments (_, identIter) {
-    return identIter.identifiers()
-  },
-  _nonterminal (children) {
-    return children.flatMap(c => c.identifiers())
-  },
-  _iter (children) {
-    return children.flatMap(c => c.identifiers())
-  },
-  identifier (first, rest) {
-    return [mangleIdentifier(this.sourceString)]
+  MethodBlock (_, blockContents, _end) {
+    return false
   }
 })
 
@@ -137,14 +137,14 @@ semantics.addOperation(
       return [
         ...identifiers.map(id => `$${id}: nil`),
         ...methodIter.children
-          .filter(m => !m.isPrimitive())
+          .filter(m => !m._isPrimitive())
           .map(m => m.toJS(ctx))
       ].join(',')
     }
 
     function handleMessageSendExpression (exp, message) {
       const { ctx } = this.args
-      const selector = message.selector()
+      const selector = message._selector()
       const args = getMessageArgs(message, ctx)
       return `$(${exp.toJS(ctx)}, '${selector}', ${args})`
     }
@@ -182,14 +182,14 @@ semantics.addOperation(
       Method (pattern, _eq, body) {
         const { ctx } = this.args
         assert(
-          !this.isPrimitive(),
+          !this._isPrimitive(),
           'toJS() not implemented on primitive methods'
         )
 
         // Calculate the `lexicalVars` attribute on all nodes.
         this.lexicalVars // eslint-disable-line no-unused-expressions
 
-        const selector = pattern.selector()
+        const selector = pattern._selector()
         const paramList = pattern.params(ctx).join(', ')
         return `'${selector}'(${paramList}){${body.toJS(ctx)}}`
       },
@@ -231,7 +231,7 @@ semantics.addOperation(
       },
       NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
         const ctx = { ...this.args.ctx, isInsideBlock: true }
-        const arity = this.blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
+        const arity = this._blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
         return `this._block${arity}((${blockPatternOpt.toJS(
           ctx
         )})=>{${blockContentsOpt.toJS(ctx)}})`
@@ -253,11 +253,13 @@ semantics.addOperation(
       LiteralNumber_int (_, integer) {
         return `this.$Integer._new(${this.sourceString})`
       },
-      LiteralSymbol (_, stringOrSelector) {
-        return `this.$Symbol._new(${stringOrSelector.asString()})`
+      LiteralSymbol (_, stringOrSel) {
+        const childIdx = stringOrSel._node.ctorName === 'string' ? 1 : 0
+        const contents = stringOrSel.child(childIdx).sourceString
+        return `this.$Symbol._new(\`${contents}\`)`
       },
       LiteralString (str) {
-        return `this.$String._new(${str.asString()})`
+        return `this.$String._new(\`${str.child(1).sourceString}\`)`
       },
       variable (pseudoVarOrIdent) {
         const { ctx } = this.args
@@ -299,59 +301,28 @@ function getMessageArgs (message, ctx) {
   }
 }
 
-semantics.addOperation('blockArity', {
+// Return the arity of a NestedBlock node.
+semantics.addOperation('_blockArity', {
   NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
     const blockPattern = blockPatternOpt.child(0)
-    return blockPattern ? blockPattern.blockArity() : 0
+    return blockPattern ? blockPattern._blockArity() : 0
   },
   BlockPattern (blockArguments, _) {
-    return blockArguments.blockArity()
+    return blockArguments._blockArity()
   },
   BlockArguments (_, identIter) {
     return identIter._node.numChildren()
   }
 })
 
-semantics.addOperation('selector', {
-  Method (pattern, _eq, _) {
-    return pattern.selector()
-  },
-  UnaryPattern (selector) {
-    return selector.sourceString
-  },
-  UnaryMessage (selector) {
-    return selector.sourceString
-  },
-  BinaryPattern (selector, _) {
-    return selector.sourceString
-  },
-  BinaryMessage (selector, _) {
-    return selector.sourceString
-  },
-  KeywordPattern (keywordIter, _) {
-    return keywordIter.children.map(c => c.sourceString).join('')
-  },
-  KeywordMessage (keywordIter, _) {
-    return keywordIter.children.map(c => c.sourceString).join('')
-  }
-})
-
-semantics.addOperation('asString', {
-  keyword (ident, _) {
-    return `'${this.sourceString}'`
-  },
-  unarySelector (_) {
-    return `'${this.sourceString}'`
-  },
-  binarySelector (_) {
-    return `'${this.sourceString}'`
-  },
-  keywordSelector (keywordIter) {
-    return `'${this.sourceString}'`
-  },
-  string (_open, charIter, _close) {
-    return '`' + charIter.sourceString + '`'
-  }
+// Return the selector of a pattern or message node.
+semantics.addOperation('_selector', {
+  UnaryPattern: sel => sel.sourceString,
+  UnaryMessage: sel => sel.sourceString,
+  BinaryPattern: (sel, _) => sel.sourceString,
+  BinaryMessage: (sel, _) => sel.sourceString,
+  KeywordPattern: (kw, _) => kw.children.map(c => c.sourceString).join(''),
+  KeywordMessage: (kw, _) => kw.children.map(c => c.sourceString).join('')
 })
 
 semantics.addOperation('params(ctx)', {
