@@ -1,5 +1,29 @@
 import primitives from './primitives/index.mjs'
 
+/*
+  The diagram below shows the structure of the kernel classes in SOM.
+  This is a simplified version of the blue book kernel -- there is no
+  Behavior or ClassDescription.
+
+  ┌────────────────────────────────────────┐
+  │     ┌──────────────┐           ┌───────┴──────┐
+  │     │    Object    ├───is-a───►│ Object class ├─is-a─┐
+  │     └──────────────┘           └──────────────┘      │
+  │             ▲                          ▲             ▼
+  │     ┌───────┴──────┐           ┌───────┴──────┐      │
+  └────►│    Class     ├───is-a───►│  Class class ├─is-a─┤
+        └──────────────┘           └──────────────┘      │
+                ▲                          ▲             ▼
+        ┌───────┴──────┐           ┌───────┴──────┐      │
+        │   Metaclass  ├───is-a───►│   Metaclass  ├─is-a─┤
+        └──────────────┘           │     class    │      │
+                  ▲                └──────────────┘      ▼
+                  └──────────────────────────────────────┘
+
+    ────────► : inheritance
+    ──is-a──► : instantiation
+*/
+
 function extend (obj, props = {}) {
   return Object.assign(Object.create(obj), props)
 }
