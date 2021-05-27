@@ -129,24 +129,22 @@ semantics.addOperation('_isPrimitive', {
 })
 
 semantics.addOperation(
-  'toJS(ctx)',
+  'toJS()',
   (() => {
+    let isInsideBlock = false
+
     function handleInstanceOrClassSlots (_, identOpt, _end, methodIter) {
-      const { ctx } = this.args
-      const identifiers = identOpt.toJS(ctx)[0] || []
+      const identifiers = identOpt.toJS()[0] || []
       return [
         ...identifiers.map(id => `$${id}: nil`),
-        ...methodIter.children
-          .filter(m => !m._isPrimitive())
-          .map(m => m.toJS(ctx))
+        ...methodIter.children.filter(m => !m._isPrimitive()).map(m => m.toJS())
       ].join(',')
     }
 
     function handleMessageSendExpression (exp, message) {
-      const { ctx } = this.args
       const selector = message._selector()
-      const args = getMessageArgs(message, ctx)
-      return `$(${exp.toJS(ctx)}, '${selector}', ${args})`
+      const args = getMessageArgs(message)
+      return `$(${exp.toJS()}, '${selector}', ${args})`
     }
 
     return {
@@ -154,25 +152,24 @@ semantics.addOperation(
       Classdef (id, _, superclass, instSlots, _sep, classSlotsOpt, _end) {
         // Calculate the `lexicalVars` attribute on all nodes.
         this.lexicalVars // eslint-disable-line no-unused-expressions
-        const { ctx } = this.args
 
-        const className = id.toJS(ctx)
-        const superclassName = superclass.toJS(ctx) || 'Object'
+        const className = id.toJS()
+        const superclassName = superclass.toJS() || 'Object'
         return (
           '({' +
           [
             `className:'${className}'`,
             `superclassName:'${superclassName}'`,
-            `instanceSlots:{${instSlots.toJS(ctx)}}`,
+            `instanceSlots:{${instSlots.toJS()}}`,
             'classSlots:{' +
               `_instVarNames: [${instSlots._instanceVariableNames()}],` +
-              `${classSlotsOpt.toJS(ctx)}}`
+              `${classSlotsOpt.toJS()}}`
           ].join(',') +
           '})'
         )
       },
       Superclass (ident, _) {
-        return ident.toJS(this.args.ctx)
+        return ident.toJS()
       },
       identifier (first, rest) {
         return mangleIdentifier(this.sourceString)
@@ -180,7 +177,6 @@ semantics.addOperation(
       InstanceSlots: handleInstanceOrClassSlots,
       ClassSlots: handleInstanceOrClassSlots,
       Method (pattern, _eq, body) {
-        const { ctx } = this.args
         assert(
           !this._isPrimitive(),
           'toJS() not implemented on primitive methods'
@@ -191,61 +187,59 @@ semantics.addOperation(
 
         const selector = pattern._selector()
         const paramList = pattern._params().join(', ')
-        return `'${selector}'(${paramList}){${body.toJS(ctx)}}`
+        return `'${selector}'(${paramList}){${body.toJS()}}`
       },
       MethodBlock (_open, blockContentsOpt, _close) {
-        const body = blockContentsOpt.toJS(this.args.ctx).join('')
+        const body = blockContentsOpt.toJS().join('')
         return `const _rv={};try{${body}}catch(e){if(e===_rv)return e.v;throw e}return this`
       },
       BlockContents (_or, localDefsOpt, _, blockBody) {
-        const { ctx } = this.args
-        return localDefsOpt.toJS(ctx).join('') + blockBody.toJS(ctx)
+        return localDefsOpt.toJS().join('') + blockBody.toJS()
       },
       LocalDefs (identifiers) {
-        return `let ${identifiers.toJS(this.args.ctx).join(',')};`
+        return `let ${identifiers.toJS().join(',')};`
       },
       BlockBody_return (_, result) {
-        return `_rv.v=${result.toJS(this.args.ctx)};throw _rv`
+        return `_rv.v=${result.toJS()};throw _rv`
       },
       BlockBody_rec (exp, _, blockBodyOptOpt) {
-        const { ctx } = this.args
-        const head = exp.toJS(ctx)
-        const tail = blockBodyOptOpt.toJS(ctx)[0]
+        const head = exp.toJS()
+        const tail = blockBodyOptOpt.toJS()[0]
         if (tail === undefined) {
-          return ctx.isInsideBlock ? `return ${head}` : head
+          return isInsideBlock ? `return ${head}` : head
         }
         return `${head};${tail}`
       },
       Expression_assignment (ident, _, exp) {
-        const { ctx } = this.args
-        return `${ident.toJS(ctx)}=${exp.toJS(ctx)}`
+        return `${ident.toJS()}=${exp.toJS()}`
       },
       KeywordExpression_rec: handleMessageSendExpression,
       BinaryExpression_rec: handleMessageSendExpression,
       UnaryExpression_rec: handleMessageSendExpression,
       Result (exp, _) {
-        return exp.toJS(this.args.ctx)
+        return exp.toJS()
       },
       NestedTerm (_open, exp, _close) {
-        return exp.toJS(this.args.ctx)
+        return exp.toJS()
       },
       NestedBlock (_open, blockPatternOpt, blockContentsOpt, _close) {
-        const ctx = { ...this.args.ctx, isInsideBlock: true }
-        const arity = this._blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
-        return `this._block${arity}((${blockPatternOpt.toJS(
-          ctx
-        )})=>{${blockContentsOpt.toJS(ctx)}})`
+        const wasInsideBlock = isInsideBlock
+        isInsideBlock = true
+        try {
+          const arity = this._blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
+          return `this._block${arity}((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
+        } finally {
+          isInsideBlock = wasInsideBlock
+        }
       },
       BlockPattern (blockArguments, _) {
-        return blockArguments.toJS(this.args.ctx)
+        return blockArguments.toJS()
       },
       BlockArguments (_, identIter) {
-        return identIter.toJS(this.args.ctx).join(',')
+        return identIter.toJS().join(',')
       },
       LiteralArray (_, _open, literalIter, _close) {
-        return `this.$Array._new([${literalIter
-          .toJS(this.args.ctx)
-          .join(',')}])`
+        return `this.$Array._new([${literalIter.toJS().join(',')}])`
       },
       LiteralNumber_double (_, double) {
         return `this.$Double._new(${this.sourceString})`
@@ -262,12 +256,11 @@ semantics.addOperation(
         return `this.$String._new(\`${str.child(1).sourceString}\`)`
       },
       variable (pseudoVarOrIdent) {
-        const { ctx } = this.args
         if (pseudoVarOrIdent._node.ctorName === 'identifier') {
-          const id = pseudoVarOrIdent.toJS(ctx)
+          const id = pseudoVarOrIdent.toJS()
           return id in this.lexicalVars ? id : `this.$${id}`
         }
-        return pseudoVarOrIdent.toJS(ctx)
+        return pseudoVarOrIdent.toJS()
       },
       self (_) {
         return 'this'
@@ -288,10 +281,10 @@ semantics.addOperation(
   })()
 )
 
-function getMessageArgs (message, ctx) {
+function getMessageArgs (message) {
   const { ctorName } = message._node
   if (ctorName === 'KeywordMessage' || ctorName === 'BinaryMessage') {
-    return message.child(1).toJS(ctx)
+    return message.child(1).toJS()
   } else if (ctorName === 'UnaryMessage') {
     return []
   }
@@ -325,19 +318,19 @@ semantics.addOperation('_selector', {
 // Return the function parameters for a Pattern node.
 semantics.addOperation('_params()', {
   UnaryPattern: _ => [],
-  BinaryPattern: (_, param) => [param.toJS({})],
-  KeywordPattern: (_, params) => params.toJS({})
+  BinaryPattern: (_, param) => [param.toJS()],
+  KeywordPattern: (_, params) => params.toJS()
 })
 
 semantics.addOperation('_instanceVariableNames()', {
   InstanceSlots (_, identOpt, _end, methodIter) {
-    return (identOpt.toJS({})[0] || []).map(id => `'${id}'`)
+    return (identOpt.toJS()[0] || []).map(id => `'${id}'`)
   }
 })
 
 export function compileForTesting (source, startRule = undefined) {
   const result = grammar.match(source, startRule)
-  return semantics(result).toJS({ isInsideBlock: false })
+  return semantics(result).toJS()
 }
 
 export function compileClass (source, env) {
@@ -347,9 +340,8 @@ export function compileClass (source, env) {
   }
   // TODO: Use `env` to ensure there are no undefined references.
   const root = semantics(result)
-  const ctx = { isInsideBlock: false }
   return {
     className: root.className(),
-    js: root.toJS(ctx)
+    js: root.toJS()
   }
 }
