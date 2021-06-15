@@ -181,7 +181,7 @@ test('codegen: other expressions', t => {
   t.snapshot(compile('x:=(3.0) + ((4.0))', 'Expression'))
 })
 
-test('semantics: lexicalVars', t => {
+test('semantics: symbolTable', t => {
   const root = semantics(
     grammar.match(`Dog = (
     run: speed = (
@@ -192,17 +192,17 @@ test('semantics: lexicalVars', t => {
   )`)
   )
 
-  // Calculate the `lexicalVars` attribute on all nodes.
-  root.lexicalVars // eslint-disable-line no-unused-expressions
+  // Calculate the `symbolTable` attribute on all nodes.
+  root.symbolTable // eslint-disable-line no-unused-expressions
 
-  // An operation that returns the value of `lexicalVars` for the variable
+  // An operation that returns the value of `symbolTable` for the variable
   // node whose text is `str`.
   semantics.addOperation(
-    'lexicalVarsAt(str)',
+    'symbolTableAt(str)',
     (() => {
       function handleInternalNode (children) {
         for (const c of children) {
-          const vars = c.lexicalVarsAt(this.args.str)
+          const vars = c.symbolTableAt(this.args.str)
           if (vars) return vars
         }
       }
@@ -211,7 +211,7 @@ test('semantics: lexicalVars', t => {
         _iter: handleInternalNode,
         variable (_) {
           return this.sourceString === this.args.str
-            ? this.lexicalVars
+            ? this.symbolTable
             : undefined
         },
         _terminal () {
@@ -221,8 +221,8 @@ test('semantics: lexicalVars', t => {
     })()
   )
 
-  t.deepEqual(allKeys(root.lexicalVarsAt('xxx1')), ['a', 'b', 'speed'])
-  t.deepEqual(allKeys(root.lexicalVarsAt('xxx2')), [
+  t.deepEqual(allKeys(root.symbolTableAt('xxx1')), ['a', 'b', 'speed'])
+  t.deepEqual(allKeys(root.symbolTableAt('xxx2')), [
     'a',
     'b',
     'c',
@@ -230,5 +230,5 @@ test('semantics: lexicalVars', t => {
     'e',
     'speed'
   ])
-  t.deepEqual(allKeys(root.lexicalVarsAt('xxx3')), [])
+  t.deepEqual(allKeys(root.symbolTableAt('xxx3')), [])
 })

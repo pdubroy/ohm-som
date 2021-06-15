@@ -5,17 +5,20 @@ import { ClassLoader } from '../ClassLoader.mjs'
 import { createKernel } from '../kernel.mjs'
 import { testDataPath } from '../paths.mjs'
 
-function installFakeString (classLoader) {
+function installFakes (classLoader) {
   const Object = classLoader.loadClass('Object')
 
   // Install a fake String constructor that just returns a native string
   Object._prototype.$String = {
     _new: str => str
   }
+  Object._prototype.$Object = Object
 }
 
 test('primitive methods', t => {
-  const loader = new ClassLoader(createKernel())
+  const loader = new ClassLoader(createKernel(), Object.create(null))
+  installFakes(loader)
+
   loader._registerPrimitives({
     Thing: {
       primitiveMethod: () => 'primitive method'
@@ -36,8 +39,8 @@ test('primitive methods', t => {
 })
 
 test('compiled methods', t => {
-  const loader = new ClassLoader(createKernel())
-  installFakeString(loader)
+  const loader = new ClassLoader(createKernel(), Object.create(null))
+  installFakes(loader)
 
   loader.registerClass('Thing', path.join(testDataPath, 'Thing.som'))
   const Thing = loader.loadClass('Thing')

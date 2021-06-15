@@ -16,19 +16,7 @@ export default {
       return Object.create(this._prototype)
     },
     fields () {
-      const fieldNames = []
-
-      // We need to manually walk up the prototype chain because Object.keys()
-      // will see all of the global symbols ($nil, etc.) on Object._prototype.
-      let proto = this._prototype
-      while (proto !== this.$Object._prototype) {
-        for (const name of Object.getOwnPropertyNames(proto)) {
-          if (isFieldName(name)) {
-            fieldNames.push(name.slice(1)) // Strip the '$'
-          }
-        }
-        proto = Object.getPrototypeOf(proto)
-      }
+      const fieldNames = this._allInstVarNames()
       return this.$Array._new(fieldNames.map(name => this.$String._new(name)))
     },
     methods () {
@@ -37,6 +25,24 @@ export default {
           .filter(isSelector)
           .map(name => this.$Method._new(this, name))
       )
+    },
+
+    // ----- Additions in ohm-som -----
+    _allInstVarNames () {
+      const names = []
+
+      // We need to manually walk up the prototype chain because Object.keys()
+      // will see all of the global symbols ($nil, etc.) on Object._prototype.
+      let proto = this._prototype
+      while (proto != null) {
+        for (const name of Object.getOwnPropertyNames(proto)) {
+          if (isFieldName(name)) {
+            names.push(name.slice(1)) // Strip the '$'
+          }
+        }
+        proto = Object.getPrototypeOf(proto)
+      }
+      return names
     }
   }
 }

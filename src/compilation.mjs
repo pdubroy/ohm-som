@@ -40,6 +40,21 @@ semantics.addOperation('superclassName', {
   }
 })
 
+// Return an Array of Method nodes representing the instance methods of the class.
+semantics.addOperation('instanceMethods', {
+  Classdef (id, eq, superclass, instSlots, sep, classSlotsOpt, end) {
+    return instSlots.child(3).children
+  }
+})
+
+// Return an Array of Method nodes representing the class methods.
+semantics.addOperation('classMethods', {
+  Classdef (id, eq, superclass, instSlots, sep, classSlotsOpt, end) {
+    const classSlots = classSlotsOpt.child(0)
+    return classSlots ? classSlots.child(3).children : []
+  }
+})
+
 const mangleIdentifier = id => (jsReservedWords.includes(id) ? `_${id}` : id)
 
 semantics.addOperation('_identifiers()', {
@@ -65,51 +80,61 @@ semantics.addOperation('_identifiers()', {
     return children.flatMap(c => c._identifiers())
   },
   identifier (first, rest) {
-    return [mangleIdentifier(this.sourceString)]
+    return [this.sourceString]
   }
 })
 
-semantics.addAttribute(
-  'lexicalVars',
-  (() => {
-    const envStack = [Object.create(null)]
+const symbolTableScope = {
+  LOCAL: 'LOCAL',
+  INSTANCE: 'INSTANCE',
+  GLOBAL: 'GLOBAL'
+}
 
-    const withEnv = (ids, fn) => {
-      const env = Object.create(envStack[envStack.length - 1])
-      ids.forEach(id => {
-        env[id] = id
-      })
-      envStack.push(env)
-      fn()
-      return envStack.pop()
+let currentLexicalEnv = Object.create(null)
+
+semantics.addAttribute(
+  'symbolTable',
+  (() => {
+    const withLocals = (ids, fn) => {
+      const prevEnv = currentLexicalEnv
+      try {
+        currentLexicalEnv = Object.create(prevEnv)
+        for (const id of ids) {
+          currentLexicalEnv[id] = symbolTableScope.LOCAL
+        }
+        fn()
+        return prevEnv
+      } finally {
+        currentLexicalEnv = prevEnv
+      }
     }
 
     return {
       Method (pattern, _eq, body) {
-        return withEnv(pattern._identifiers(), () => {
-          body.lexicalVars // eslint-disable-line no-unused-expressions
+        return withLocals(pattern._identifiers(), () => {
+          body.symbolTable // eslint-disable-line no-unused-expressions
         })
       },
       BlockContents (_, localDefsOpt, _1, blockBody) {
         const localDefs = localDefsOpt.child(0)
         const ids = localDefs ? localDefs._identifiers() : []
-        return withEnv(ids, () => {
-          blockBody.lexicalVars // eslint-disable-line no-unused-expressions
+        return withLocals(ids, () => {
+          blockBody.symbolTable // eslint-disable-line no-unused-expressions
         })
       },
       NestedBlock (_, blockPatternOpt, blockContentsOpt, _1) {
         const blockPattern = blockPatternOpt.child(0)
         const ids = blockPattern ? blockPattern._identifiers() : []
-        return withEnv(ids, () => {
-          blockContentsOpt.lexicalVars // eslint-disable-line no-unused-expressions
+        return withLocals(ids, () => {
+          blockContentsOpt.symbolTable // eslint-disable-line no-unused-expressions
         })
       },
       _nonterminal (children) {
-        children.forEach(c => c.lexicalVars)
-        return envStack[envStack.length - 1]
+        children.forEach(c => c.symbolTable)
+        return currentLexicalEnv
       },
       _terminal () {
-        return envStack[envStack.length - 1]
+        return currentLexicalEnv
       }
     }
   })()
@@ -128,6 +153,7 @@ semantics.addOperation('_isPrimitive', {
   }
 })
 
+// XXX - get rid of any implementation other than for methods.
 semantics.addOperation(
   'toJS()',
   (() => {
@@ -150,8 +176,8 @@ semantics.addOperation(
     return {
       // Returns a JavaScript *expression* for a Smalltalk class definition.
       Classdef (id, _, superclass, instSlots, _sep, classSlotsOpt, _end) {
-        // Calculate the `lexicalVars` attribute on all nodes.
-        this.lexicalVars // eslint-disable-line no-unused-expressions
+        // Calculate the `symbolTable` attribute on all nodes.
+        this.symbolTable // eslint-disable-line no-unused-expressions
 
         const className = id.toJS()
         const superclassName = superclass.toJS() || 'Object'
@@ -162,7 +188,7 @@ semantics.addOperation(
             `superclassName:'${superclassName}'`,
             `instanceSlots:{${instSlots.toJS()}}`,
             'classSlots:{' +
-              `_instVarNames: [${instSlots._instanceVariableNames()}],` +
+              `_instVarNames: [${instSlots.instanceVariableNames()}],` +
               `${classSlotsOpt.toJS()}}`
           ].join(',') +
           '})'
@@ -182,8 +208,8 @@ semantics.addOperation(
           'toJS() not implemented on primitive methods'
         )
 
-        // Calculate the `lexicalVars` attribute on all nodes.
-        this.lexicalVars // eslint-disable-line no-unused-expressions
+        // Calculate the `symbolTable` attribute on all nodes.
+        this.symbolTable // eslint-disable-line no-unused-expressions
 
         const selector = pattern._selector()
         const paramList = pattern._params().join(', ')
@@ -210,8 +236,16 @@ semantics.addOperation(
         }
         return `${head};${tail}`
       },
-      Expression_assignment (ident, _, exp) {
-        return `${ident.toJS()}=${exp.toJS()}`
+      Expression_assignment (variable, _, exp) {
+        const { sourceString } = variable
+        const scope = this.symbolTable[sourceString]
+        if (scope === symbolTableScope.LOCAL) {
+          return `${mangleIdentifier(sourceString)}=${exp.toJS()}`
+        } else if (scope === symbolTableScope.INSTANCE) {
+          return `this.$${sourceString}=${exp.toJS()}`
+        } else {
+          return `$setG(this,'$${sourceString}',${exp.toJS()})` // Global
+        }
       },
       KeywordExpression_rec: handleMessageSendExpression,
       BinaryExpression_rec: handleMessageSendExpression,
@@ -257,8 +291,15 @@ semantics.addOperation(
       },
       variable (pseudoVarOrIdent) {
         if (pseudoVarOrIdent._node.ctorName === 'identifier') {
-          const id = pseudoVarOrIdent.toJS()
-          return id in this.lexicalVars ? id : `this.$${id}`
+          const { sourceString } = pseudoVarOrIdent
+          const scope = this.symbolTable[sourceString]
+          if (scope === symbolTableScope.LOCAL) {
+            return mangleIdentifier(sourceString)
+          } else if (scope === symbolTableScope.INSTANCE) {
+            return `this.$${sourceString}`
+          } else {
+            return `$g(this,'$${sourceString}')` // Global
+          }
         }
         return pseudoVarOrIdent.toJS()
       },
@@ -305,8 +346,9 @@ semantics.addOperation('_blockArity', {
   }
 })
 
-// Return the selector of a pattern or message node.
+// Return the selector of a Method, pattern, or message node.
 semantics.addOperation('_selector', {
+  Method: (patt, _, body) => patt._selector(),
   UnaryPattern: sel => sel.sourceString,
   UnaryMessage: sel => sel.sourceString,
   BinaryPattern: (sel, _) => sel.sourceString,
@@ -322,9 +364,21 @@ semantics.addOperation('_params()', {
   KeywordPattern: (_, params) => params.toJS()
 })
 
-semantics.addOperation('_instanceVariableNames()', {
+semantics.addOperation('instanceVariableNames()', {
+  Classdef (id, eq, superclass, instSlots, sep, classSlots, end) {
+    return instSlots.instanceVariableNames()
+  },
   InstanceSlots (_, identOpt, _end, methodIter) {
-    return (identOpt.toJS()[0] || []).map(id => `'${id}'`)
+    return identOpt.toJS()[0] || []
+  }
+})
+
+semantics.addOperation('classVariableNames()', {
+  Classdef (id, eq, superclass, instSlots, sep, classSlotsOpt, end) {
+    return classSlotsOpt.classVariableNames()[0]
+  },
+  ClassSlots (_, identOpt, _end, methodIter) {
+    return identOpt.toJS()[0] || []
   }
 })
 
@@ -333,15 +387,45 @@ export function compileForTesting (source, startRule = undefined) {
   return semantics(result).toJS()
 }
 
+function compileMethodsInClass (methods, cls) {
+  const prevEnv = currentLexicalEnv
+  try {
+    // Set up the base lexical environment shared by the methods,
+    // containing all of the instance variables.
+    currentLexicalEnv = Object.create(null)
+    for (const name of cls._allInstVarNames()) {
+      currentLexicalEnv[name] = symbolTableScope.INSTANCE
+    }
+
+    const compiledMethods = methods
+      .filter(m => !m._isPrimitive())
+      .map(m => {
+        // Force the symbol table to be computed (and cached) for all nodes.
+        m.symbolTable // eslint-disable-line no-unused-expressions
+
+        // ...and compile the method.
+        return m.toJS()
+      })
+    return `{${compiledMethods.join(',')}}`
+  } finally {
+    currentLexicalEnv = prevEnv
+  }
+}
+
 export function compileClass (source, env) {
   const result = grammar.match(source)
   if (result.failed()) {
     throw new Error(result.message)
   }
-  // TODO: Use `env` to ensure there are no undefined references.
   const root = semantics(result)
   return {
     className: root.className(),
-    js: root.toJS()
+    superclassName: root.superclassName(),
+    instanceVariableNames: root.instanceVariableNames(),
+    //    classVariableNames: root._classVariableNames()
+    instanceMethodsToJS: cls =>
+      compileMethodsInClass(root.instanceMethods(), cls),
+    classMethodsToJS: metaclass =>
+      compileMethodsInClass(root.classMethods(), metaclass)
   }
 }
