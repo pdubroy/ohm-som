@@ -57,14 +57,23 @@ export class ClassLoader {
 
   // Create a new class named `name` which inherits from `superclass`.
   // Also creates the associated metaclass.
-  _createClass (name, superclass, instMethods = {}, classMethods = {}) {
+  _createClass (
+    name,
+    superclass,
+    instVarNames,
+    instMethods,
+    classVarNames = [],
+    classMethods = {}
+  ) {
+    const classSlots = { ...classMethods, _instVarNames: classVarNames }
     const metaclass = createClassStub(
       this.loadClass('Metaclass'),
       `${name} class`,
       superclass.class(),
-      classMethods
+      classSlots
     )
-    return createClassStub(metaclass, name, superclass, instMethods)
+    const instSlots = { ...instMethods, _instVarNames: instVarNames }
+    return createClassStub(metaclass, name, superclass, instSlots)
   }
 
   registerClass (className, filename) {
@@ -117,11 +126,11 @@ export class ClassLoader {
     const cls = this._createClass(
       className,
       superclass,
+      spec.instanceVariableNames,
       this._getPrimitives(className),
+      spec.classVariableNames,
       this._getPrimitives(`${className} class`)
     )
-    // FIXME: Find a better way to do this
-    cls.class()._prototype._instVarNames = spec.instanceVariableNames
 
     this._addMethodsToClass(cls, spec, filename)
     return cls

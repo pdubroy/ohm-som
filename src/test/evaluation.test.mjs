@@ -1,7 +1,7 @@
 import test from 'ava'
 
 import { doIt, Environment } from '../evaluation.mjs'
-import { stringValue } from '../helpers.mjs'
+import { integerValue, stringValue } from '../helpers.mjs'
 
 test('class hierarchy', t => {
   t.is(stringValue(doIt('Object name')), 'Object')
@@ -105,4 +105,17 @@ test('Integer>>to:do:', t => {
 
   aTest.run3()
   t.is(count, 6)
+})
+
+test('Class variables', t => {
+  const env = new Environment()
+  env._loadClassFromSource(`
+    Thing = (
+      ----
+      | x |
+      setX: value = (x := value)
+      x = (^x)
+    )
+  `)
+  t.is(integerValue(env.eval('(Thing setX: 3) x')), 3)
 })

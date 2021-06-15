@@ -422,7 +422,7 @@ export function compileClass (source, env) {
     className: root.className(),
     superclassName: root.superclassName(),
     instanceVariableNames: root.instanceVariableNames(),
-    //    classVariableNames: root._classVariableNames()
+    classVariableNames: root.classVariableNames(),
     instanceMethodsToJS: cls =>
       compileMethodsInClass(root.instanceMethods(), cls),
     classMethodsToJS: metaclass =>

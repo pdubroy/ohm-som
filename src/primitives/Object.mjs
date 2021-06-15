@@ -47,12 +47,12 @@ export default {
     },
 
     'instVarAt:' (idx) {
-      const name = this.class()._instVarNames[integerValue(idx) - 1]
+      const name = this._instVarNames[integerValue(idx) - 1]
       return this[`$${name}`]
     },
 
     'instVarAt:put:' (idx, obj) {
-      const name = this.class()._instVarNames[integerValue(idx) - 1]
+      const name = this._instVarNames[integerValue(idx) - 1]
       return (this[`$${name}`] = obj)
     },
 
