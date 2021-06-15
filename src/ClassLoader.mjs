@@ -66,13 +66,16 @@ export class ClassLoader {
     classMethods = {}
   ) {
     const classSlots = { ...classMethods, _instVarNames: classVarNames }
+    classVarNames.forEach(n => (classSlots[`$${n}`] = this._nil))
     const metaclass = createClassStub(
       this.loadClass('Metaclass'),
       `${name} class`,
       superclass.class(),
       classSlots
     )
+
     const instSlots = { ...instMethods, _instVarNames: instVarNames }
+    instVarNames.forEach(n => (instSlots[`$${n}`] = this._nil))
     return createClassStub(metaclass, name, superclass, instSlots)
   }
 

@@ -107,6 +107,21 @@ test('Integer>>to:do:', t => {
   t.is(count, 6)
 })
 
+test('Instance variables initialized to nil', t => {
+  const env = new Environment()
+  env._loadClassFromSource(`
+    Thing = (
+      | instVar |
+      instVar = (^instVar)
+      ----
+      | classVar |
+      classVar = (^classVar)
+    )
+  `)
+  t.is(env.eval('Thing new instVar'), env.get('nil'))
+  t.is(env.eval('Thing classVar'), env.get('nil'))
+})
+
 test('Class variables', t => {
   const env = new Environment()
   env._loadClassFromSource(`
