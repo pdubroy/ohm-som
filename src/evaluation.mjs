@@ -12,7 +12,7 @@ export class Environment {
   constructor () {
     const g = (this.globals = Object.create(null))
     const primitives = createPrimitives(this.globals)
-    const kernel = createKernel(this.globals, primitives)
+    const kernel = createKernel(primitives)
     this._classLoader = new ClassLoader(kernel, this.globals, primitives)
     this.registerClasspath(somClassLibPath)
 

@@ -1,6 +1,6 @@
 import fnv1a from 'fnv1a'
 
-import { assert } from '../assert.mjs'
+import { assert, checkNotNull } from '../assert.mjs'
 import { integerValue, arrayValue, stringValue } from '../helpers.mjs'
 
 export default g => ({
@@ -10,7 +10,7 @@ export default g => ({
     },
 
     '==' (other) {
-      return this._bool(this === other)
+      return g._bool(this === other)
     },
 
     hashcode () {
@@ -71,8 +71,11 @@ export default g => ({
       }
       return false
     },
-    _checkIsKindOf (cls) {
-      const className = cls._name
+    _checkIsKindOf (className) {
+      const cls = checkNotNull(
+        g[`$${className}`],
+        `No class named '${className}'`
+      )
       assert(this._isKindOf(cls), `Not a ${className}`)
       return this
     },

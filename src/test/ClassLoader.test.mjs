@@ -6,26 +6,25 @@ import { createKernel } from '../kernel.mjs'
 import { testDataPath } from '../paths.mjs'
 import { createKernelPrimitivesForTesting } from '../primitives/index.mjs'
 
-function installFakes (classLoader) {
-  const Object = classLoader.loadClass('Object')
-
-  // Install a fake String constructor that just returns a native string
-  Object._prototype.$String = {
-    _new: str => str
-  }
-  Object._prototype.$Object = Object
-}
-
 function createKernelForTesting (globals) {
   const primitives = createKernelPrimitivesForTesting(globals)
-  return createKernel(null, primitives)
+  return createKernel(primitives)
+}
+
+function createClassLoaderForTesting () {
+  const globals = Object.create(null)
+  const loader = new ClassLoader(createKernelForTesting(globals), globals)
+
+  globals.$Object = loader.loadClass('Object')
+
+  // Install a fake String constructor that just returns a native string
+  globals.$String = { _new: str => str }
+
+  return loader
 }
 
 test('primitive methods', t => {
-  const globals = Object.create(null)
-  const loader = new ClassLoader(createKernelForTesting(globals), globals)
-  installFakes(loader)
-
+  const loader = createClassLoaderForTesting()
   loader._registerPrimitives({
     Thing: {
       primitiveMethod: () => 'primitive method'
@@ -46,10 +45,7 @@ test('primitive methods', t => {
 })
 
 test('compiled methods', t => {
-  const globals = Object.create(null)
-  const loader = new ClassLoader(createKernelForTesting(globals), globals)
-  installFakes(loader)
-
+  const loader = createClassLoaderForTesting()
   loader.registerClass('Thing', path.join(testDataPath, 'Thing.som'))
   const Thing = loader.loadClass('Thing')
 

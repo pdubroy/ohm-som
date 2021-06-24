@@ -10,8 +10,7 @@ function createKernelForTesting () {
   globals.$Symbol = { _new: str => str }
 
   const primitives = createKernelPrimitivesForTesting(globals)
-  // TODO: Do we need to pass the globals here rather than `null`?
-  return createKernel(null, primitives)
+  return createKernel(primitives)
 }
 
 test('kernel classes', t => {

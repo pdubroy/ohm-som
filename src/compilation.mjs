@@ -262,7 +262,7 @@ semantics.addOperation(
         isInsideBlock = true
         try {
           const arity = this._blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
-          return `this._block${arity}((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
+          return `$g('_block${arity}')((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
         } finally {
           isInsideBlock = wasInsideBlock
         }
@@ -274,21 +274,21 @@ semantics.addOperation(
         return identIter.toJS().join(',')
       },
       LiteralArray (_, _open, literalIter, _close) {
-        return `this.$Array._new([${literalIter.toJS().join(',')}])`
+        return `$g('$Array')._new([${literalIter.toJS().join(',')}])`
       },
       LiteralNumber_double (_, double) {
-        return `this.$Double._new(${this.sourceString})`
+        return `$g('$Double')._new(${this.sourceString})`
       },
       LiteralNumber_int (_, integer) {
-        return `this.$Integer._new(${this.sourceString})`
+        return `$g('$Integer')._new(${this.sourceString})`
       },
       LiteralSymbol (_, stringOrSel) {
         const childIdx = stringOrSel._node.ctorName === 'string' ? 1 : 0
         const contents = stringOrSel.child(childIdx).sourceString
-        return `this.$Symbol._new(\`${contents}\`)`
+        return `$g('$Symbol')._new(\`${contents}\`)`
       },
       LiteralString (str) {
-        return `this.$String._new(\`${str.child(1).sourceString}\`)`
+        return `$g('$String')._new(\`${str.child(1).sourceString}\`)`
       },
       variable (pseudoVarOrIdent) {
         if (pseudoVarOrIdent._node.ctorName === 'identifier') {
@@ -309,7 +309,7 @@ semantics.addOperation(
         return 'this'
       },
       super (_) {
-        return 'this._super(this)'
+        return "$g('_super')(this)"
       },
       nil (_) {
         return 'nil'

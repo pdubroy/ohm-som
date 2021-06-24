@@ -17,7 +17,7 @@ export default g => ({
     },
     'hasGlobal:' (aSymbol) {
       const name = stringValue(aSymbol)
-      return this._bool(name in this._globals)
+      return g._bool(name in this._globals)
     },
     'load:' (symbol) {
       return this._load(stringValue(symbol))

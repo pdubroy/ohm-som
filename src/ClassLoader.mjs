@@ -16,6 +16,8 @@ export class ClassLoader {
     this._primitives = new Map()
     this._classMap = new Map()
 
+    // TODO: Put these in a class? E.g. `Runtime` (maybe with _eval too).
+    this._sendMessage = (...args) => sendMessage(globals, ...args)
     this._setGlobal = (...args) => setGlobal(globals, ...args)
     this._getGlobal = (...args) => getGlobal(globals, ...args)
 
@@ -159,7 +161,7 @@ export class ClassLoader {
   _eval (jsExpr) {
     // eslint-disable-next-line no-new-func
     return new Function('$', '$g', '$setG', 'nil', `return ${jsExpr}`)(
-      sendMessage,
+      this._sendMessage,
       this._getGlobal,
       this._setGlobal,
       this._nil

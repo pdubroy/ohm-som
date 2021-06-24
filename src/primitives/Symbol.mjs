@@ -6,10 +6,10 @@ export default g => ({
   },
   'Symbol class': {
     _new (str) {
-      let sym = this._symbolTable.get(str)
+      let sym = g._symbolTable.get(str)
       if (!sym) {
         sym = this._basicNew({ _str: str })
-        this._symbolTable.set(str, sym)
+        g._symbolTable.set(str, sym)
       }
       return sym
     }

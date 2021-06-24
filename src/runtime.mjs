@@ -18,7 +18,7 @@ export function createSuperProxy (target) {
   return new Proxy(target, superProxyHandler)
 }
 
-export function sendMessage (receiver, selector, ...args) {
+export function sendMessage (globals, receiver, selector, ...args) {
   checkNotNull(receiver, `receiver of #${selector} is null`)
   logger.info(
     `sending ${receiver.class()._name}>>#${selector} w/ ${args.length} args`
@@ -27,8 +27,8 @@ export function sendMessage (receiver, selector, ...args) {
     return receiver[selector](...args)
   }
   return receiver['doesNotUnderstand:arguments:'](
-    receiver.$Symbol._new(selector),
-    receiver.$Array._new(args)
+    globals.$Symbol._new(selector),
+    globals.$Array._new(args)
   )
 }
 

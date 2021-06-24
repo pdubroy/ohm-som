@@ -37,12 +37,12 @@ export function createClassStub (cls, name, superclass, instSlots = {}) {
 }
 
 // Returns freshly-created set of kernel classes/objects.
-export function createKernel (rootProto = null, primitives) {
+export function createKernel (primitives) {
   // First, create stubs.
   const SomObject = createClassStub(
     null, // -> ObjectClass -- see (1), below
     'Object',
-    { _prototype: rootProto }, // -> Seen as `nil` -- see (4)
+    { _prototype: null }, // -> Seen as `nil` -- see (4)
     primitives.Object
   )
 
@@ -92,7 +92,7 @@ export function createKernel (rootProto = null, primitives) {
   // (4) Implement superclass and ensure `Object superclass` returns `nil`.
   Class._prototype.superclass = function () {
     const parentProto = Reflect.getPrototypeOf(this._prototype)
-    return parentProto === rootProto ? nil : parentProto.class()
+    return parentProto === null ? nil : parentProto.class()
   }
 
   return { Object: SomObject, Class, Metaclass, Nil, nil }

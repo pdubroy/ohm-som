@@ -33,10 +33,10 @@ export default g => ({
       return g.$Double._new(Math.sin(this._val))
     },
     '=' (argument) {
-      return this._bool(this._val === numberValue(argument))
+      return g._bool(this._val === numberValue(argument))
     },
     '<' (argument) {
-      return this._bool(this._val < numberValue(argument))
+      return g._bool(this._val < numberValue(argument))
     },
     asString () {
       return g.$String._new(`${this._val}`)

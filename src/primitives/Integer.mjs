@@ -70,7 +70,7 @@ export default g => ({
     // ----- Comparing -----
 
     '=' (other) {
-      return this._bool(
+      return g._bool(
         (other._isInteger() || other._isDouble()) &&
           this._val === numberValue(other)
       )
@@ -82,7 +82,7 @@ export default g => ({
       return this['='](other)
     },
     '<' (other) {
-      return this._bool(
+      return g._bool(
         (other._isInteger() || other._isDouble()) &&
           this._val < numberValue(other)
       )

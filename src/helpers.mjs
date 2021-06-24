@@ -20,8 +20,7 @@ export const isSelector = propName =>
   !isFieldName(propName) && !isInternalProperty(propName)
 
 export function arrayValue (obj) {
-  obj._checkIsKindOf(obj.$Array)
-  return obj._arr
+  return obj._checkIsKindOf('Array')._arr
 }
 
 export function integerValue (obj) {
@@ -41,5 +40,5 @@ export function numberValue (obj) {
 }
 
 export function stringValue (obj) {
-  return obj._checkIsKindOf(obj.$String)._str
+  return obj._checkIsKindOf('String')._str
 }

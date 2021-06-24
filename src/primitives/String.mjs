@@ -20,16 +20,16 @@ export default g => ({
       return g.$Integer._new(this._str.length)
     },
     isWhiteSpace () {
-      return this._bool(/^\s+$/.test(this._str))
+      return g._bool(/^\s+$/.test(this._str))
     },
     isLetters () {
-      return this._bool(/^\p{L}+$/u.test(this._str))
+      return g._bool(/^\p{L}+$/u.test(this._str))
     },
     isDigits () {
-      return this._bool(/^[0-9]+$/.test(this._str))
+      return g._bool(/^[0-9]+$/.test(this._str))
     },
     '=' (argument) {
-      return this._bool(
+      return g._bool(
         argument._isKindOf(g.$String) && argument._str === this._str
       )
     },
