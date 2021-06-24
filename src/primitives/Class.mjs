@@ -1,9 +1,9 @@
 import { isFieldName, isSelector } from '../helpers.mjs'
 
-export default {
+export default g => ({
   Class: {
     name () {
-      return this.$Symbol._new(this._name)
+      return g.$Symbol._new(this._name)
     },
     superclass () {
       throw new Error('should not be called — overridden in kernel.mjs')
@@ -17,13 +17,13 @@ export default {
     },
     fields () {
       const fieldNames = this._allInstVarNames()
-      return this.$Array._new(fieldNames.map(name => this.$String._new(name)))
+      return g.$Array._new(fieldNames.map(name => g.$String._new(name)))
     },
     methods () {
-      return this.$Array._new(
+      return g.$Array._new(
         Object.keys(this._prototype)
           .filter(isSelector)
-          .map(name => this.$Method._new(this, name))
+          .map(name => g.$Method._new(this, name))
       )
     },
 
@@ -45,4 +45,4 @@ export default {
       return names
     }
   }
-}
+})

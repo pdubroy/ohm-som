@@ -2,7 +2,7 @@ import { performance } from 'perf_hooks'
 
 import { stringValue } from '../helpers.mjs'
 
-export default {
+export default g => ({
   System: {
     'global:' (aSymbol) {
       return this._global(stringValue(aSymbol))
@@ -40,10 +40,10 @@ export default {
       throw new Error('not implemented')
     },
     ticks () {
-      return this.$Integer._new(Math.round(performance.now() * 1000))
+      return g.$Integer._new(Math.round(performance.now() * 1000))
     },
     fullGC () {
-      return this.$false
+      return g.$false
     }
   },
   'System class': {
@@ -51,4 +51,4 @@ export default {
       return this._basicNew({ _globals: globals, _classLoader: classLoader })
     }
   }
-}
+})

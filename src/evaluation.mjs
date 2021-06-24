@@ -5,13 +5,15 @@ import { assert } from './assert.mjs'
 import { ClassLoader } from './ClassLoader.mjs'
 import { createKernel } from './kernel.mjs'
 import { somClassLibPath } from './paths.mjs'
+import { createPrimitives } from './primitives/index.mjs'
 import { createSuperProxy } from './runtime.mjs'
 
 export class Environment {
   constructor () {
     const g = (this.globals = Object.create(null))
-    const kernel = createKernel(this.globals)
-    this._classLoader = new ClassLoader(kernel, this.globals)
+    const primitives = createPrimitives(this.globals)
+    const kernel = createKernel(this.globals, primitives)
+    this._classLoader = new ClassLoader(kernel, this.globals, primitives)
     this.registerClasspath(somClassLibPath)
 
     Object.assign(this.globals, {

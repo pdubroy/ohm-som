@@ -1,7 +1,7 @@
-export default {
+export default g => ({
   Symbol: {
     asString () {
-      return this.$String._new(this._str)
+      return g.$String._new(this._str)
     }
   },
   'Symbol class': {
@@ -14,4 +14,4 @@ export default {
       return sym
     }
   }
-}
+})

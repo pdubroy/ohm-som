@@ -4,6 +4,7 @@ import path from 'path'
 import { ClassLoader } from '../ClassLoader.mjs'
 import { createKernel } from '../kernel.mjs'
 import { testDataPath } from '../paths.mjs'
+import { createKernelPrimitivesForTesting } from '../primitives/index.mjs'
 
 function installFakes (classLoader) {
   const Object = classLoader.loadClass('Object')
@@ -15,8 +16,14 @@ function installFakes (classLoader) {
   Object._prototype.$Object = Object
 }
 
+function createKernelForTesting (globals) {
+  const primitives = createKernelPrimitivesForTesting(globals)
+  return createKernel(null, primitives)
+}
+
 test('primitive methods', t => {
-  const loader = new ClassLoader(createKernel(), Object.create(null))
+  const globals = Object.create(null)
+  const loader = new ClassLoader(createKernelForTesting(globals), globals)
   installFakes(loader)
 
   loader._registerPrimitives({
@@ -39,7 +46,8 @@ test('primitive methods', t => {
 })
 
 test('compiled methods', t => {
-  const loader = new ClassLoader(createKernel(), Object.create(null))
+  const globals = Object.create(null)
+  const loader = new ClassLoader(createKernelForTesting(globals), globals)
   installFakes(loader)
 
   loader.registerClass('Thing', path.join(testDataPath, 'Thing.som'))

@@ -3,7 +3,7 @@ import fnv1a from 'fnv1a'
 import { assert } from '../assert.mjs'
 import { integerValue, arrayValue, stringValue } from '../helpers.mjs'
 
-export default {
+export default g => ({
   Object: {
     objectSize () {
       throw new Error('not implemented')
@@ -17,7 +17,7 @@ export default {
       if (this._hashcode === undefined) {
         this._hashcode = fnv1a(new Date().toISOString())
       }
-      return this.$Integer._new(this._hashcode)
+      return g.$Integer._new(this._hashcode)
     },
 
     inspect () {
@@ -83,4 +83,4 @@ export default {
       return false
     }
   }
-}
+})

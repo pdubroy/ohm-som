@@ -6,13 +6,12 @@ import { compileClass } from './compilation.mjs'
 import { createClassStub } from './kernel.mjs'
 import { Logger } from './Logger.mjs'
 import { somClassLibPath } from './paths.mjs'
-import primitives from './primitives/index.mjs'
 import { getGlobal, setGlobal, sendMessage } from './runtime.mjs'
 
 const logger = Logger.get('classloading')
 
 export class ClassLoader {
-  constructor (kernel, globals) {
+  constructor (kernel, globals, primitives) {
     this._depth = -1
     this._primitives = new Map()
     this._classMap = new Map()
@@ -159,11 +158,11 @@ export class ClassLoader {
 
   _eval (jsExpr) {
     // eslint-disable-next-line no-new-func
-    return new Function('nil', '$', '$g', '$setG', `return ${jsExpr}`)(
-      this._nil,
+    return new Function('$', '$g', '$setG', 'nil', `return ${jsExpr}`)(
       sendMessage,
       this._getGlobal,
-      this._setGlobal
+      this._setGlobal,
+      this._nil
     )
   }
 

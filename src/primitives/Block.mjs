@@ -1,4 +1,4 @@
-export default {
+export default g => ({
   Block: {
     value () {
       return this._fn()
@@ -7,10 +7,10 @@ export default {
       throw new Error('Not supported: Block>>restart')
     },
     '_OVERRIDE_whileTrue:' (block) {
-      while (this.value() === this.$true) {
+      while (this.value() === g.$true) {
         block.value()
       }
-      return this.$nil
+      return g.$nil
     }
   },
   'Block class': {
@@ -33,4 +33,4 @@ export default {
       return this._fn(arg1, arg2)
     }
   }
-}
+})

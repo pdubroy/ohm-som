@@ -1,3 +1,4 @@
+import { checkNotNull } from './assert.mjs'
 import { isSelector } from './helpers.mjs'
 import { Logger } from './Logger.mjs'
 
@@ -18,8 +19,9 @@ export function createSuperProxy (target) {
 }
 
 export function sendMessage (receiver, selector, ...args) {
+  checkNotNull(receiver, `receiver of #${selector} is null`)
   logger.info(
-    `sending ${receiver.class()._name} ${selector} w/ ${args.length} args`
+    `sending ${receiver.class()._name}>>#${selector} w/ ${args.length} args`
   )
   if (selector in receiver) {
     return receiver[selector](...args)
@@ -30,12 +32,10 @@ export function sendMessage (receiver, selector, ...args) {
   )
 }
 
-export function getGlobal (globals, receiver, name) {
-  // TODO: Use `globals` here.
-  return receiver[name]
+export function getGlobal (globals, name, receiver) {
+  return globals[name]
 }
 
-export function setGlobal (globals, receiver, name, value) {
-  // TODO: Use `globals` here.
-  receiver[name] = value
+export function setGlobal (globals, name, value, receiver) {
+  globals[name] = value
 }

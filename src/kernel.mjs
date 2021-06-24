@@ -1,5 +1,3 @@
-import primitives from './primitives/index.mjs'
-
 /*
   The diagram below shows the structure of the kernel classes in SOM.
   This is a simplified version of the blue book kernel -- there is no
@@ -39,7 +37,7 @@ export function createClassStub (cls, name, superclass, instSlots = {}) {
 }
 
 // Returns freshly-created set of kernel classes/objects.
-export function createKernel (rootProto = null) {
+export function createKernel (rootProto = null, primitives) {
   // First, create stubs.
   const SomObject = createClassStub(
     null, // -> ObjectClass -- see (1), below

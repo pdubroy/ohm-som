@@ -9,15 +9,20 @@ import stringPrimitives from './String.mjs'
 import symbolPrimitives from './Symbol.mjs'
 import systemPrimitives from './System.mjs'
 
-export default {
-  ...arrayPrimitives,
-  ...blockPrimitives,
-  ...classPrimitives,
-  ...doublePrimitives,
-  ...integerPrimitives,
-  ...methodPrimitives,
-  ...objectPrimitives,
-  ...stringPrimitives,
-  ...symbolPrimitives,
-  ...systemPrimitives
-}
+export const createPrimitives = (...args) => ({
+  ...arrayPrimitives(...args),
+  ...blockPrimitives(...args),
+  ...classPrimitives(...args),
+  ...doublePrimitives(...args),
+  ...integerPrimitives(...args),
+  ...methodPrimitives(...args),
+  ...objectPrimitives(...args),
+  ...stringPrimitives(...args),
+  ...symbolPrimitives(...args),
+  ...systemPrimitives(...args)
+})
+
+export const createKernelPrimitivesForTesting = (...args) => ({
+  ...classPrimitives(...args),
+  ...objectPrimitives(...args)
+})

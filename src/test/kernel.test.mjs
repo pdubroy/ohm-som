@@ -1,14 +1,21 @@
 import test from 'ava'
 
+import { createKernelPrimitivesForTesting } from '../primitives/index.mjs'
 import { createKernel } from '../kernel.mjs'
 
-const { Object, Class, Metaclass, Nil, nil } = createKernel()
+function createKernelForTesting () {
+  const globals = Object.create(null)
+
+  // Fake the Symbol constructor to make it return a native string.
+  globals.$Symbol = { _new: str => str }
+
+  const primitives = createKernelPrimitivesForTesting(globals)
+  // TODO: Do we need to pass the globals here rather than `null`?
+  return createKernel(null, primitives)
+}
 
 test('kernel classes', t => {
-  // Fake the Symbol constructor to make it return a native string.
-  Object._prototype.$Symbol = {
-    _new: str => str
-  }
+  const { Object, Class, Metaclass, Nil, nil } = createKernelForTesting()
 
   t.is(Object.name(), 'Object')
   t.is(Object.class().name(), 'Object class')

@@ -244,7 +244,8 @@ semantics.addOperation(
         } else if (scope === symbolTableScope.INSTANCE) {
           return `this.$${sourceString}=${exp.toJS()}`
         } else {
-          return `$setG(this,'$${sourceString}',${exp.toJS()})` // Global
+          // Global
+          return `$setG('$${sourceString}',${exp.toJS()}, this)`
         }
       },
       KeywordExpression_rec: handleMessageSendExpression,
@@ -298,7 +299,8 @@ semantics.addOperation(
           } else if (scope === symbolTableScope.INSTANCE) {
             return `this.$${sourceString}`
           } else {
-            return `$g(this,'$${sourceString}')` // Global
+            // Global
+            return `$g('$${sourceString}', this)`
           }
         }
         return pseudoVarOrIdent.toJS()
@@ -310,13 +312,13 @@ semantics.addOperation(
         return 'this._super(this)'
       },
       nil (_) {
-        return 'this.$nil'
+        return 'nil'
       },
       true (_) {
-        return 'this.$true'
+        return "$g('$true')"
       },
       false (_) {
-        return 'this.$false'
+        return "$g('$false')"
       }
     }
   })()

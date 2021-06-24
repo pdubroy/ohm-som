@@ -1,6 +1,6 @@
 import { integerValue } from '../helpers.mjs'
 
-export default {
+export default g => ({
   Array: {
     'at:' (index) {
       return this._arr[integerValue(index) - 1]
@@ -9,7 +9,7 @@ export default {
       return (this._arr[integerValue(index) - 1] = value)
     },
     length () {
-      return this.$Integer._new(this._arr.length)
+      return g.$Integer._new(this._arr.length)
     }
   },
   'Array class': {
@@ -20,9 +20,9 @@ export default {
       const arr = []
       const primitiveLength = integerValue(length)
       for (let i = 0; i < primitiveLength; i++) {
-        arr.push(this.$nil)
+        arr.push(g.$nil)
       }
       return this._new(arr)
     }
   }
-}
+})
