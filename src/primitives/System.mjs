@@ -8,11 +8,11 @@ export default g => ({
       return this._global(stringValue(aSymbol))
     },
     _global (name) {
-      return this._globals[`$${name}`]
+      return this._globals[name]
     },
     'global:put:' (aSymbol, value) {
       const name = stringValue(aSymbol)
-      this._globals[`$${name}`] = value
+      this._globals[name] = value
       return this
     },
     'hasGlobal:' (aSymbol) {
@@ -40,10 +40,10 @@ export default g => ({
       throw new Error('not implemented')
     },
     ticks () {
-      return g.$Integer._new(Math.round(performance.now() * 1000))
+      return g.Integer._new(Math.round(performance.now() * 1000))
     },
     fullGC () {
-      return g.$false
+      return g.false
     }
   },
   'System class': {

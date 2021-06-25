@@ -5,19 +5,19 @@ import { integerValue, stringValue } from '../helpers.mjs'
 export default g => ({
   String: {
     'concatenate:' (argument) {
-      return g.$String._new(this._str + stringValue(argument.asString()))
+      return g.String._new(this._str + stringValue(argument.asString()))
     },
     asSymbol () {
-      return g.$Symbol._new(this._str)
+      return g.Symbol._new(this._str)
     },
     hashcode () {
       if (this._hashcode === undefined) {
         this._hashcode = fnv1a(this._str)
       }
-      return g.$Integer._new(this._hashcode)
+      return g.Integer._new(this._hashcode)
     },
     length () {
-      return g.$Integer._new(this._str.length)
+      return g.Integer._new(this._str.length)
     },
     isWhiteSpace () {
       return g._bool(/^\s+$/.test(this._str))
@@ -30,13 +30,13 @@ export default g => ({
     },
     '=' (argument) {
       return g._bool(
-        argument._isKindOf(g.$String) && argument._str === this._str
+        argument._isKindOf(g.String) && argument._str === this._str
       )
     },
     'primSubstringFrom:to:' (start, end) {
       const startVal = integerValue(start) - 1
       const endVal = integerValue(end)
-      return g.$String._new(this._str.slice(startVal, endVal))
+      return g.String._new(this._str.slice(startVal, endVal))
     },
     [Symbol.toPrimitive] (hint) {
       return this._str

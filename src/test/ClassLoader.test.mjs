@@ -15,10 +15,10 @@ function createClassLoaderForTesting () {
   const globals = Object.create(null)
   const loader = new ClassLoader(createKernelForTesting(globals), globals)
 
-  globals.$Object = loader.loadClass('Object')
+  globals.Object = loader.loadClass('Object')
 
   // Install a fake String constructor that just returns a native string
-  globals.$String = { _new: str => str }
+  globals.String = { _new: str => str }
 
   return loader
 }

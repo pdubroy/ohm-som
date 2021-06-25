@@ -245,7 +245,7 @@ semantics.addOperation(
           return `this.$${sourceString}=${exp.toJS()}`
         } else {
           // Global
-          return `$setG('$${sourceString}',${exp.toJS()}, this)`
+          return `$setG('${sourceString}',${exp.toJS()}, this)`
         }
       },
       KeywordExpression_rec: handleMessageSendExpression,
@@ -274,21 +274,21 @@ semantics.addOperation(
         return identIter.toJS().join(',')
       },
       LiteralArray (_, _open, literalIter, _close) {
-        return `$g('$Array')._new([${literalIter.toJS().join(',')}])`
+        return `$g('Array')._new([${literalIter.toJS().join(',')}])`
       },
       LiteralNumber_double (_, double) {
-        return `$g('$Double')._new(${this.sourceString})`
+        return `$g('Double')._new(${this.sourceString})`
       },
       LiteralNumber_int (_, integer) {
-        return `$g('$Integer')._new(${this.sourceString})`
+        return `$g('Integer')._new(${this.sourceString})`
       },
       LiteralSymbol (_, stringOrSel) {
         const childIdx = stringOrSel._node.ctorName === 'string' ? 1 : 0
         const contents = stringOrSel.child(childIdx).sourceString
-        return `$g('$Symbol')._new(\`${contents}\`)`
+        return `$g('Symbol')._new(\`${contents}\`)`
       },
       LiteralString (str) {
-        return `$g('$String')._new(\`${str.child(1).sourceString}\`)`
+        return `$g('String')._new(\`${str.child(1).sourceString}\`)`
       },
       variable (pseudoVarOrIdent) {
         if (pseudoVarOrIdent._node.ctorName === 'identifier') {
@@ -300,7 +300,7 @@ semantics.addOperation(
             return `this.$${sourceString}`
           } else {
             // Global
-            return `$g('$${sourceString}', this)`
+            return `$g('${sourceString}', this)`
           }
         }
         return pseudoVarOrIdent.toJS()
@@ -315,10 +315,10 @@ semantics.addOperation(
         return 'nil'
       },
       true (_) {
-        return "$g('$true')"
+        return "$g('true')"
       },
       false (_) {
-        return "$g('$false')"
+        return "$g('false')"
       }
     }
   })()

@@ -13,53 +13,53 @@ export default g => ({
     // ----- Arithmetic -----
 
     '+' (other) {
-      const cls = other._isInteger() ? g.$Integer : g.$Double
+      const cls = other._isInteger() ? g.Integer : g.Double
       return cls._new(this._val + numberValue(other))
     },
     '-' (other) {
-      const cls = other._isInteger() ? g.$Integer : g.$Double
+      const cls = other._isInteger() ? g.Integer : g.Double
       return cls._new(this._val - numberValue(other))
     },
     '*' (other) {
-      const cls = other._isInteger() ? g.$Integer : g.$Double
+      const cls = other._isInteger() ? g.Integer : g.Double
       return cls._new(this._val * numberValue(other))
     },
     // Integer division
     '/' (other) {
-      return g.$Integer._new(Math.floor(this._val / numberValue(other)))
+      return g.Integer._new(Math.floor(this._val / numberValue(other)))
     },
     // Double division
     '//' (argument) {
       // Same as Double
-      return g.$Double._new(this._val / numberValue(argument))
+      return g.Double._new(this._val / numberValue(argument))
     },
     // modulo
     '%' (divisor) {
-      const cls = divisor._isInteger() ? g.$Integer : g.$Double
+      const cls = divisor._isInteger() ? g.Integer : g.Double
       return cls._new(modulo(this._val, numberValue(divisor)))
     },
     // remainder
     'rem:' (divisor) {
-      const cls = divisor._isInteger() ? g.$Integer : g.$Double
+      const cls = divisor._isInteger() ? g.Integer : g.Double
       return cls._new(this._val % numberValue(divisor))
     },
     '&' (argument) {
-      return g.$Integer._new(this._val & integerValue(argument))
+      return g.Integer._new(this._val & integerValue(argument))
     },
     '<<' (argument) {
       // Avoid using the native `<<` operator, because that converts to int32.
-      return g.$Integer._new(this._val * Math.pow(2, integerValue(argument)))
+      return g.Integer._new(this._val * Math.pow(2, integerValue(argument)))
     },
     '>>>' (argument) {
-      return g.$Integer._new(this._val >>> integerValue(argument))
+      return g.Integer._new(this._val >>> integerValue(argument))
     },
     'bitXor:' (argument) {
-      return g.$Integer._new(this._val ^ integerValue(argument))
+      return g.Integer._new(this._val ^ integerValue(argument))
     },
     sqrt () {
       // Almost the same as Double, but uses Integer if possible.
       const val = Math.sqrt(this._val)
-      return Number.isInteger(val) ? g.$Integer._new(val) : g.$Double._new(val)
+      return Number.isInteger(val) ? g.Integer._new(val) : g.Double._new(val)
     },
 
     // ----- Random numbers -----
@@ -91,13 +91,13 @@ export default g => ({
     // ----- Converting -----
 
     asString () {
-      return g.$String._new(`${this._val}`)
+      return g.String._new(`${this._val}`)
     },
     as32BitSignedValue () {
-      return g.$Integer._new(toInt32(this._val))
+      return g.Integer._new(toInt32(this._val))
     },
     as32BitUnsignedValue () {
-      return g.$Integer._new(toUint32(this._val))
+      return g.Integer._new(toUint32(this._val))
     },
 
     // ----- ohm-som additions -----

@@ -73,7 +73,7 @@ test('implicit self return', t => {
   const Thing = env._loadClassFromSource(
     'Thing = (yourself = () yourself2 = (2))'
   )
-  t.is(env.globals.$Thing, Thing)
+  t.is(env.globals.Thing, Thing)
   t.is(env.eval('Thing new yourself class'), Thing)
   t.is(env.eval('Thing new yourself2 class'), Thing)
 })

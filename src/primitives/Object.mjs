@@ -17,7 +17,7 @@ export default g => ({
       if (this._hashcode === undefined) {
         this._hashcode = fnv1a(new Date().toISOString())
       }
-      return g.$Integer._new(this._hashcode)
+      return g.Integer._new(this._hashcode)
     },
 
     inspect () {
@@ -72,10 +72,7 @@ export default g => ({
       return false
     },
     _checkIsKindOf (className) {
-      const cls = checkNotNull(
-        g[`$${className}`],
-        `No class named '${className}'`
-      )
+      const cls = checkNotNull(g[className], `No class named '${className}'`)
       assert(this._isKindOf(cls), `Not a ${className}`)
       return this
     },

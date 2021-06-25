@@ -7,10 +7,10 @@ export default g => ({
       throw new Error('Not supported: Block>>restart')
     },
     '_OVERRIDE_whileTrue:' (block) {
-      while (this.value() === g.$true) {
+      while (this.value() === g.true) {
         block.value()
       }
-      return g.$nil
+      return g.nil
     }
   },
   'Block class': {

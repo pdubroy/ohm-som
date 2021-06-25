@@ -7,7 +7,7 @@ function createKernelForTesting () {
   const globals = Object.create(null)
 
   // Fake the Symbol constructor to make it return a native string.
-  globals.$Symbol = { _new: str => str }
+  globals.Symbol = { _new: str => str }
 
   const primitives = createKernelPrimitivesForTesting(globals)
   return createKernel(primitives)

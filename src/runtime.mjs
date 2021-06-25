@@ -27,8 +27,8 @@ export function sendMessage (globals, receiver, selector, ...args) {
     return receiver[selector](...args)
   }
   return receiver['doesNotUnderstand:arguments:'](
-    globals.$Symbol._new(selector),
-    globals.$Array._new(args)
+    globals.Symbol._new(selector),
+    globals.Array._new(args)
   )
 }
 

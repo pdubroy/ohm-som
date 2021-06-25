@@ -9,7 +9,7 @@ export default g => ({
       return (this._arr[integerValue(index) - 1] = value)
     },
     length () {
-      return g.$Integer._new(this._arr.length)
+      return g.Integer._new(this._arr.length)
     }
   },
   'Array class': {
@@ -20,7 +20,7 @@ export default g => ({
       const arr = []
       const primitiveLength = integerValue(length)
       for (let i = 0; i < primitiveLength; i++) {
-        arr.push(g.$nil)
+        arr.push(g.nil)
       }
       return this._new(arr)
     }

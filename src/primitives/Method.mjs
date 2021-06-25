@@ -3,7 +3,7 @@ import { assert } from '../assert.mjs'
 export default g => ({
   Method: {
     signature () {
-      return g.$String._new(this._signature)
+      return g.String._new(this._signature)
     },
     holder () {
       return this._holder
