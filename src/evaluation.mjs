@@ -46,6 +46,9 @@ export class Environment {
       if (filename) {
         this._classLoader.registerClass(className, filename)
       }
+      // TODO: Get rid of this, and let Object>>#unknownGlobal: trigger the
+      // class load. But then we need to make sure all the native code uses
+      // the same code path as generated code.
       Object.defineProperty(this.globals, className, {
         get: () => this._classLoader.loadClass(className),
         configurable: true,

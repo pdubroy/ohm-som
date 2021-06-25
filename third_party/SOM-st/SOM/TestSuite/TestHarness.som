@@ -39,7 +39,7 @@ TestHarness = (
           CompilerReturnTest,
           DoesNotUnderstandTest,
           DoubleTest,
-          "GlobalTest,"
+          GlobalTest,
           HashTest,
           IntegerTest,
           PreliminaryTest,

@@ -33,7 +33,10 @@ export function sendMessage (globals, receiver, selector, ...args) {
 }
 
 export function getGlobal (globals, name, receiver) {
-  return globals[name]
+  if (name in globals) {
+    return globals[name]
+  }
+  return receiver['unknownGlobal:'](globals.Symbol._new(name))
 }
 
 export function setGlobal (globals, name, value, receiver) {
