@@ -1,8 +1,5 @@
-import fs from 'fs'
-import ohm from 'ohm-js'
-
 import { assert } from './assert.mjs'
-import { somGrammarPath } from './paths.mjs'
+import somGrammar from './SOM.ohm-recipe.js'
 
 // From https://262.ecma-international.org/11.0/#sec-keywords-and-reserved-words
 // prettier-ignore
@@ -21,7 +18,7 @@ const jsReservedWords = [
   'arguments', 'eval'
 ]
 
-export const grammar = ohm.grammar(fs.readFileSync(somGrammarPath))
+export const grammar = somGrammar
 
 export const semantics = grammar.createSemantics()
 
@@ -133,6 +130,10 @@ semantics.addAttribute(
         children.forEach(c => c.symbolTable)
         return currentLexicalEnv
       },
+      _iter (children) {
+        children.forEach(c => c.symbolTable)
+        return currentLexicalEnv
+      },
       _terminal () {
         return currentLexicalEnv
       }
@@ -160,7 +161,7 @@ semantics.addOperation(
     let isInsideBlock = false
 
     function handleInstanceOrClassSlots (_, identOpt, _end, methodIter) {
-      const identifiers = identOpt.toJS()[0] || []
+      const identifiers = identOpt.children.map(c => c.toJS())[0] || []
       return [
         ...identifiers.map(id => `$${id}: nil`),
         ...methodIter.children.filter(m => !m._isPrimitive()).map(m => m.toJS())
@@ -189,13 +190,13 @@ semantics.addOperation(
             `instanceSlots:{${instSlots.toJS()}}`,
             'classSlots:{' +
               `_instVarNames: [${instSlots.instanceVariableNames()}],` +
-              `${classSlotsOpt.toJS()}}`
+              `${classSlotsOpt.children.map(c => c.toJS())}}`
           ].join(',') +
           '})'
         )
       },
-      Superclass (ident, _) {
-        return ident.toJS()
+      Superclass (identOpt, _) {
+        return identOpt.children.map(c => c.toJS())
       },
       identifier (first, rest) {
         return mangleIdentifier(this.sourceString)
@@ -216,21 +217,26 @@ semantics.addOperation(
         return `'${selector}'(${paramList}){${body.toJS()}}`
       },
       MethodBlock (_open, blockContentsOpt, _close) {
-        const body = blockContentsOpt.toJS().join('')
+        const body = blockContentsOpt.children.map(c => c.toJS()).join('')
         return `const _rv={};try{${body}}catch(e){if(e===_rv)return e.v;throw e}return this`
       },
       BlockContents (_or, localDefsOpt, _, blockBody) {
-        return localDefsOpt.toJS().join('') + blockBody.toJS()
+        return (
+          localDefsOpt.children.map(c => c.toJS()).join('') + blockBody.toJS()
+        )
       },
       LocalDefs (identifiers) {
-        return `let ${identifiers.toJS().join(',')};`
+        const ids = identifiers.children.map(c => c.toJS())
+        return `let ${ids.join(',')};`
       },
       BlockBody_return (_, result) {
         return `_rv.v=${result.toJS()};throw _rv`
       },
       BlockBody_rec (exp, _, blockBodyOptOpt) {
         const head = exp.toJS()
-        const tail = blockBodyOptOpt.toJS()[0]
+        const tail = blockBodyOptOpt.children.map(c =>
+          c.children.map(x => x.toJS())
+        )[0]
         if (tail === undefined) {
           return isInsideBlock ? `return ${head}` : head
         }
@@ -262,7 +268,9 @@ semantics.addOperation(
         isInsideBlock = true
         try {
           const arity = this._blockArity() + 1 // Block1 takes 0 args, Block2 takes 1, etc.
-          return `$g('_block${arity}')((${blockPatternOpt.toJS()})=>{${blockContentsOpt.toJS()}})`
+          const patt = blockPatternOpt.children.map(c => c.toJS())
+          const contents = blockContentsOpt.children.map(c => c.toJS())
+          return `$g('_block${arity}')((${patt})=>{${contents}})`
         } finally {
           isInsideBlock = wasInsideBlock
         }
@@ -271,10 +279,11 @@ semantics.addOperation(
         return blockArguments.toJS()
       },
       BlockArguments (_, identIter) {
-        return identIter.toJS().join(',')
+        return identIter.children.map(c => c.toJS()).join(',')
       },
       LiteralArray (_, _open, literalIter, _close) {
-        return `$g('Array')._new([${literalIter.toJS().join(',')}])`
+        const literals = literalIter.children.map(c => c.toJS())
+        return `$g('Array')._new([${literals.join(',')}])`
       },
       LiteralNumber_double (_, double) {
         return `$g('Double')._new(${this.sourceString})`
@@ -327,7 +336,7 @@ semantics.addOperation(
 function getMessageArgs (message) {
   const { ctorName } = message._node
   if (ctorName === 'KeywordMessage' || ctorName === 'BinaryMessage') {
-    return message.child(1).toJS()
+    return message.child(1).children.map(c => c.toJS())
   } else if (ctorName === 'UnaryMessage') {
     return []
   }
@@ -363,24 +372,27 @@ semantics.addOperation('_selector', {
 semantics.addOperation('_params()', {
   UnaryPattern: _ => [],
   BinaryPattern: (_, param) => [param.toJS()],
-  KeywordPattern: (_, params) => params.toJS()
+  KeywordPattern: (_, params) => params.children.map(c => c.toJS())
 })
 
 semantics.addOperation('instanceVariableNames()', {
   Classdef (id, eq, superclass, instSlots, sep, classSlots, end) {
     return instSlots.instanceVariableNames()
   },
-  InstanceSlots (_, identOpt, _end, methodIter) {
-    return identOpt.toJS()[0] || []
+  InstanceSlots (_, identIterOpt, _end, methodIter) {
+    const identIter = identIterOpt.child(0)
+    return identIter ? identIter.children.map(c => c.toJS()) : []
   }
 })
 
 semantics.addOperation('classVariableNames()', {
   Classdef (id, eq, superclass, instSlots, sep, classSlotsOpt, end) {
-    return classSlotsOpt.classVariableNames()[0]
+    const classSlots = classSlotsOpt.child(0)
+    return classSlots ? classSlots.classVariableNames() : []
   },
-  ClassSlots (_, identOpt, _end, methodIter) {
-    return identOpt.toJS()[0] || []
+  ClassSlots (_, identIterOpt, _end, methodIter) {
+    const identIter = identIterOpt.child(0)
+    return identIter ? identIter.children.map(c => c.toJS()) : []
   }
 })
 

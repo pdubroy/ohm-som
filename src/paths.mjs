@@ -8,8 +8,6 @@ export const somTestSuitePath = path.join(
   '../third_party/SOM-st/SOM/TestSuite'
 )
 
-export const somGrammarPath = path.join(__dirname, 'SOM.ohm')
-
 export const somClassLibPath = path.join(
   __dirname,
   '../third_party/SOM-st/SOM/Smalltalk'
